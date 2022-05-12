@@ -20,6 +20,5 @@ options:
 
 programs:
   guppy: /qbio/yoojung/gh/ont-guppy/bin/guppy_basecaller
-  #repeathmm: /qbio/yoojung/gh/RepeatHMM/bin/repeatHMM.py
-  repeathmm: /blaze/hyeshik/s/yoojung/2022/05-repeat/RepeatHMM/bin/repeatHMM.py
+  repeathmm: /qbio/yoojung/gh/RepeatHMM/bin/repeatHMM.py
   repeathmm_condaenv: repeathmm
