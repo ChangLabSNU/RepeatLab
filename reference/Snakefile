@@ -10,7 +10,8 @@ rule all:
 
 rule download_genome_fasta:
     output: f'{REFERENCE}.genome.fa.gz'
-    shell: 'curl {REFERENCE_FASTA_URL} > {output}'
+    threads: 10
+    shell: 'curl {REFERENCE_FASTA_URL} | zcat | bgzip -c -@ {threads} > {output}'
 
 rule build_minimap2_genome_index:
     input: f'{REFERENCE}.genome.fa.gz'
