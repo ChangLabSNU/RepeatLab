@@ -23,7 +23,7 @@ rule guppy_basecall:
                    -x {bcopts["cuda_devices"]} \
                    -i {srcdir} -c {bcopts["model"]} \
                    -s {params.outputdir} --compress_fastq --disable_pings \
-                   --min_qscore {bcopts["min_qsocre"]} \
+                   --min_qscore {bcopts["min_qscore"]} \
                    --gpu_runners_per_device {bcopts["gpu_runners"]} \
                    --num_callers {bcopts["num_callers"]}')
        shell('zcat {params.outputdir}/pass/fastq_*.fastq.gz | \
