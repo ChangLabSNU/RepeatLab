@@ -2,10 +2,10 @@ data:
   sources:
     DM12: /qbio/datasets/2022/20220203-SSLabMed-Nanopore
   
-  analysis:
-    - name: 'DM12-DMPK'
-      source: 'DM12'
-      target: 'DMPK'
+analysis:
+  DM12-DMPK:
+    source: 'DM12'
+    target: 'DMPK'
 
 options:
   basecalling:
@@ -16,7 +16,10 @@ options:
     min_qscore: 8
 
   reference: 'reference/GRCh38.v39'
+  repeat_presets: 'presets/GRCh38.v39.predefined.pa'
 
 programs:
   guppy: /qbio/yoojung/gh/ont-guppy/bin/guppy_basecaller
-  repeathmm: /qbio/yoojung/gh/RepeatHMM/bin/repeatHMM.py
+  #repeathmm: /qbio/yoojung/gh/RepeatHMM/bin/repeatHMM.py
+  repeathmm: /blaze/hyeshik/s/yoojung/2022/05-repeat/RepeatHMM/bin/repeatHMM.py
+  repeathmm_condaenv: repeathmm

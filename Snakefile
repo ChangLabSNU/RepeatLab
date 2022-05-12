@@ -40,29 +40,42 @@ rule align:
 
 rule sort_bam:
     input: 'alignments/{sample}_sup.unsorted.bam'
-    output:
-        'alignments/{sample}_sup.sorted.bam',
-        'alignments/{sample}_sup.sorted.bam.csi'
+    output: 'alignments/{sample}_sup.sorted.bam'
     threads: 10
-    shell: 'samtools sort --write-index -@ {threads} -o {output} {input}'
+    shell: 'samtools sort -@ {threads} -o {output} {input}'
+
+rule index_bam:
+    input: 'alignments/{sample}_sup.sorted.bam'
+    output: 'alignments/{sample}_sup.sorted.bam.bai'
+    shell: 'samtools index {input}'
 
 rule stats_bam:
     input: 'alignments/{sample}_sup.sorted.bam'
     output: 'alignments/{sample}_sup.sorted.bam.stats'
     shell: 'samtools stats {input} > {output}'
 
+def prepare_inputs_repeathmm(wildcards):
+    analysis_setting = config['analysis'][wildcards.analysis]
+    sample = analysis_setting['source']
+    return {
+        'patternfile': config['options']['repeat_presets'],
+        'bam': f'alignments/{sample}_sup.sorted.bam',
+        'bai': f'alignments/{sample}_sup.sorted.bam.bai',
+        'reference': f'{REFERENCE}.genome.fa.gz'
+    }
+
 rule count_repeat_repeathmm:
-    input:
-        patternfile = 'GRCh38.v39.predefined.pa',
-        bam = 'alignments/{sample}_sup.sorted.bam',
-        reference = 'reference/GRCh38.v39.genome.fa.gz'
-    output: 'logbam/RepBAM_{gene}.gmm_GapCorrection1_FlankLength30_SplitAndReAlign1_2_7_4_80_10_100_hg38_comp_{sample}_I0.120_D0.020_S0.020.log'
+    input: unpack(prepare_inputs_repeathmm)
+    output: 'analyses/{analysis}/result.log'
+    params: outfolder='analyses/{analysis}'
+    #RepBAM_{gene}.gmm_GapCorrection1_FlankLength30_SplitAndReAlign1_2_7_4_80_10_100_hg38_comp_{sample}_I0.120_D0.020_S0.020.log'
     run:
-        targetgene = TARGETGENE
-        sampleid = SAMPLES
-        shell('./cdrun.sh repeathmmenv {REPEATHMM_CMD} BAMinput --repeatName {targetgene} \
-                --GapCorrection 1 --FlankLength 30 --UserDefinedUniqID {sampleid} \
-                --Onebamfile {input.bam} --outFolder {output} \
+        analysis_setting = config['analysis'][wildcards.analysis]
+        gene = analysis_setting['target']
+        shell(f'conda run --no-capture-output -n {config["programs"]["repeathmm_condaenv"]} \
+                python2 {config["programs"]["repeathmm"]} BAMinput --repeatName {gene} \
+                --GapCorrection 1 --FlankLength 30 --UserDefinedUniqID {wildcards.analysis} \
+                --Onebamfile {input.bam} --outFolder {params.outfolder} \
                 --Patternfile {input.patternfile} \
                 --hgfile {input.reference}')
 
