@@ -80,5 +80,5 @@ rule count_repeat_repeathmm:
 rule plot_repeat_count_histogram:
     input: 'logbam/RepBAM_{gene}.gmm_GapCorrection1_FlankLength30_SplitAndReAlign1_2_7_4_80_10_100_hg38_comp_{sample}_I0.120_D0.020_S0.020.log'
     output: '{sample}_{gene}_RepeatCount.png'
-    shell: 'python plotRepeatCount.py {input}'
+    shell: 'python pyscripts/plotRepeatCount.py {input}'
     
