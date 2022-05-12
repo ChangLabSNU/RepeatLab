@@ -1,0 +1,26 @@
+REFERENCE = 'GRCh38.v39'
+
+rule all:
+    input:
+        expand('{reference}.genome.fa.gz', reference=REFERENCE),
+        expand('{reference}.genome.mm2.idx', reference=REFERENCE),
+        expand('{reference}.genome.fa.gz.amb', reference=REFERENCE),
+        expand('{reference}.genome.fa.gz.ann', reference=REFERENCE),
+        expand('{reference}.genome.fa.gz.bwt', reference=REFERENCE),
+        expand('{reference}.genome.fa.gz.pac', reference=REFERENCE),
+        expand('{reference}.genome.fa.gz.sa', reference=REFERENCE)
+
+rule build_minimap2_genome_index:
+    input: '{reference}.genome.fa.gz'
+    output: '{reference}.genome.mm2.idx'
+    shell: 'zcat {input} | minimap2 -k 13 -d {output} /dev/stdin'
+
+rule build_bwa_genome_index:
+    input: '{reference}.genome.fa.gz'
+    output: 
+        '{reference}.genome.fa.gz.amb',
+        '{reference}.genome.fa.gz.ann',
+        '{reference}.genome.fa.gz.bwt',
+        '{reference}.genome.fa.gz.pac',
+        '{reference}.genome.fa.gz.sa'
+    shell: 'bwa index {input}'
