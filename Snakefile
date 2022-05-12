@@ -67,19 +67,28 @@ def prepare_inputs_repeathmm(wildcards):
 rule count_repeat_repeathmm:
     input: unpack(prepare_inputs_repeathmm)
     output: 'analyses/{analysis}/result.log'
-    params: outfolder='analyses/{analysis}'
-    #RepBAM_{gene}.gmm_GapCorrection1_FlankLength30_SplitAndReAlign1_2_7_4_80_10_100_hg38_comp_{sample}_I0.120_D0.020_S0.020.log'
+    params:
+        tmpdir='analyses/{analysis}/tmp',
+        logbam='logbam'
     run:
         analysis_setting = config['analysis'][wildcards.analysis]
+        sample = analysis_setting['source']
         gene = analysis_setting['target']
+        if not os.path.isdir(params.tmpdir):
+            os.makedirs(params.tmpdir)
+        if os.path.isdir(params.logbam):
+            shell('rm -rf {params.logbam}')
+        os.makedirs(params.logbam)
+
         shell(f'conda run --no-capture-output -n {config["programs"]["repeathmm_condaenv"]} \
                 python2 {config["programs"]["repeathmm"]} BAMinput --repeatName {gene} \
                 --GapCorrection 1 --FlankLength 30 --UserDefinedUniqID {wildcards.analysis} \
-                --Onebamfile {input.bam} --outFolder {params.outfolder} \
+                --Onebamfile {input.bam} --outFolder {params.tmpdir}/ \
                 --Patternfile {input.patternfile} \
                 --hgfile {input.reference}')
+        shell('mv {params.logbam}/RepBAM_{gene}.gmm*_{sample}_*.log {output}')
 
 rule plot_repeat_count_histogram:
-    input: 'logbam/RepBAM_{gene}.gmm_GapCorrection1_FlankLength30_SplitAndReAlign1_2_7_4_80_10_100_hg38_comp_{sample}_I0.120_D0.020_S0.020.log'
-    output: '{sample}_{gene}_RepeatCount.png'
+    input: 'analyses/{analysis}/result.log'
+    output: 'plots/RepeatCount-{sample}_{gene}.png'
     shell: 'python pyscripts/plotRepeatCount.py {input}'
