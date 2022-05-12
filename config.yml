@@ -1,6 +1,6 @@
 data:
   sources:
-    DM12: /qbio/datasets/2022/20220203-SSLabMed-Nanopore
+    DM12: /qbio/datasets/2022/20220203-SSLabMed-Nanopore/fast5/F_DMPK_DM12/
   
 analysis:
   DM12-DMPK:
