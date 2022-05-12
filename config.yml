@@ -13,6 +13,7 @@ options:
     cuda_devices: cuda:all
     gpu_runners: 2
     num_callers: 2
+    min_qscore: 8
 
   reference: 'reference/GRCh38.v39'
 
