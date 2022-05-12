@@ -61,7 +61,7 @@ def prepare_inputs_repeathmm(wildcards):
         'patternfile': config['options']['repeat_presets'],
         'bam': f'alignments/{sample}_sup.sorted.bam',
         'bai': f'alignments/{sample}_sup.sorted.bam.bai',
-        'reference': f'{REFERENCE}.genome.fa.gz'
+        'reference': os.path.abspath(f'{REFERENCE}.genome.fa.gz')
     }
 
 rule count_repeat_repeathmm:
