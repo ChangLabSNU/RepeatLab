@@ -1,0 +1,24 @@
+data:
+  sources:
+    DM12: /qbio/datasets/2022/20220203-SSLabMed-Nanopore
+  
+analysis:
+  DM12-DMPK:
+    source: 'DM12'
+    target: 'DMPK'
+
+options:
+  basecalling:
+    model: dna_r9.4.1_450bps_sup.cfg
+    cuda_devices: cuda:all
+    gpu_runners: 2
+    num_callers: 2
+    min_qscore: 8
+
+  reference: 'reference/GRCh38.v39'
+  repeat_presets: 'presets/GRCh38.v39.predefined.pa'
+
+programs:
+  guppy: /qbio/yoojung/gh/ont-guppy/bin/guppy_basecaller
+  repeathmm: /qbio/yoojung/gh/RepeatHMM/bin/repeatHMM.py
+  repeathmm_condaenv: repeathmm

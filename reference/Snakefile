@@ -10,12 +10,13 @@ rule all:
 
 rule download_genome_fasta:
     output: f'{REFERENCE}.genome.fa.gz'
-    shell: 'curl {REFERENCE_FASTA_URL} > {output}'
+    threads: 10
+    shell: 'curl {REFERENCE_FASTA_URL} | zcat | bgzip -c -@ {threads} > {output}'
 
 rule build_minimap2_genome_index:
     input: f'{REFERENCE}.genome.fa.gz'
     output: f'{REFERENCE}.genome.mm2.idx'
-    shell: 'zcat {input} | minimap2 -k 13 -d {output} /dev/stdin'
+    shell: 'zcat {input} | minimap2 -k 13 -w 6 -d {output} /dev/stdin'
 
 rule build_bwa_genome_index:
     input: f'{REFERENCE}.genome.fa.gz'

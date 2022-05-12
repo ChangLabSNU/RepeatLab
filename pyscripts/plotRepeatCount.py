@@ -5,6 +5,7 @@ import re
 import matplotlib.pyplot as plt
 
 input_log = sys.argv[1]
+output_plot = sys.argv[2]
 
 repeat_count_pat = re.compile('\d+:\d+,')
 sampleid_pat = re.compile('Input BAM file is .+.bam')
@@ -21,15 +22,15 @@ with open(input_log) as logfile:
                 repeat_len = int(count_set[0])
                 read_num = int(count_set[1])
                 hist_dict[repeat_len] = read_num
-                
+
         sampleid_sen = re.findall(sampleid_pat, line)
         if len(sampleid_sen) != 0:
             sampleid = str(sampleid_sen[0]).split('/')[-1].split('_')[0]
-            
+
         gene_sen = re.findall(gene_pat, line)
         if len(gene_sen) != 0:
             gene = gene_sen[0].split("'")[1].upper()
-            
+
 fig, axes = plt.subplots(1,2,figsize=(12,7))
 
 ax1 = axes[0]
@@ -46,4 +47,4 @@ width = [0.4]*(len(arraydata)+1)
 ax2.axis('off')
 ax2.table(cellText=arraydata, colLabels=column_labels, colColours=['#E4E9BE']*3, loc='center', cellLoc='center', colWidths=width).set_fontsize(8)
 
-fig.savefig('{}_{}_RepeatCount.png'.format(sampleid, gene))
+fig.savefig(output_plot)

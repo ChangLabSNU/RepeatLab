@@ -1,84 +1,94 @@
-SOURCES = {
-    'DM12' : '20220203-SSLabMed-Nanopore/fast5/F_DMPK_DM12/'
-}
+configfile: 'config.yml'
 
-SAMPLE = ['DM12']
-
-TARGETGENE = ['DMPK']
-
-REFERENCE = 'GRCh38.v39'
-
-CONFIG = 'dna_r9.4.1_450bps_sup.cfg'
-
-GUPPY_CMD = '~/gh/ont-guppy/bin/guppy_basecaller'
-REPEATHMM_CMD = 'python ~/gh/RepeatHMM/bin/repeatHMM.py'
+SAMPLES = list(config['data']['sources'])
+REFERENCE = config['options']['reference']
 
 rule all:
     input:
-        expand('basecall/guppy/sup/{sample}/basecalls.fastq.gz', sample=SAMPLE),
-        expand('alignments/{sample}_sup.unsorted.bam', sample=SAMPLE),
-        expand('alignments/{sample}_sup.sorted.bam', sample=SAMPLE),
-        expand('alignments/{sample}_sup.sorted.bam.bai', sample=SAMPLE),
-        expand('alignments/{sample}_sup.sorted.bam.stats', sample=SAMPLE),
-        expand('logbam/RepBAM_{gene}.gmm_GapCorrection1_FlankLength30_SplitAndReAlign1_2_7_4_80_10_100_hg38_comp_{sample}_I0.120_D0.020_S0.020.log', sample=SAMPLE, gene=TARGETGENE),
-        expand('{sample}_{gene}_RepeatCount.png', sample=SAMPLE, gene=TARGETGENE)
-        
+        expand('basecalls/guppy/sup/{sample}/pass.fastq.gz', sample=SAMPLES),
+        expand('alignments/{sample}_sup.sorted.bam', sample=SAMPLES),
+        expand('alignments/{sample}_sup.sorted.bam.stats', sample=SAMPLES),
+        expand('analyses/{analysis}/result.log', analysis=config['analysis']),
+        expand('plots/RepeatCount-{analysis}.png', analysis=config['analysis'])
+
 rule guppy_basecall:
-    output: 'basecall/guppy/sup/{sample}/basecalls.fastq.gz'
+    output: 'basecalls/guppy/sup/{sample}/pass.fastq.gz'
     params:
-        outputdir='basecall/guppy/sup/{sample}/'
+        outputdir='basecalls/guppy/sup/{sample}/'
+    threads: 10
     run:
-       srcdir = SOURCES[wildcards.sample]
-       config = CONFIG
-       gpus = 'cuda:6,7'
-       shell('{GUPPY_CMD} --recursive \
-                   -x {gpus} -i {srcdir} -c {config} \
+       srcdir = config['data']['sources'][wildcards.sample]
+       bcopts = config['options']['basecalling']
+       shell(f'{config["programs"]["guppy"]} --recursive \
+                   -x {bcopts["cuda_devices"]} \
+                   -i {srcdir} -c {bcopts["model"]} \
                    -s {params.outputdir} --compress_fastq --disable_pings \
-                   --gpu_runners_per_device 2 --num_callers 2')
-       shell('zcat {params.outputdir}/pass/fastq_*.fastq.gz | bgzip -@ 10 -c /dev/stdin > {output}')
+                   --min_qscore {bcopts["min_qscore"]} \
+                   --gpu_runners_per_device {bcopts["gpu_runners"]} \
+                   --num_callers {bcopts["num_callers"]}')
+       shell('zcat {params.outputdir}/pass/fastq_*.fastq.gz | \
+              bgzip -@ {threads} -c > {output}')
 
 rule align:
-    input: 
-        fastq = 'basecall/guppy/sup/{sample}/basecalls.fastq.gz',
-        index = 'reference/GRCh38.v39.genome.mm2.idx'
-    output: 'alignments/{sample}_sup.unsorted.bam'
+    input:
+        fastq='basecalls/guppy/sup/{sample}/pass.fastq.gz',
+        index=f'{REFERENCE}.genome.mm2.idx'
+    output: temp('alignments/{sample}_sup.unsorted.bam')
     threads: 10
     shell: 'minimap2 -a -x map-ont -t {threads} --MD {input.index} {input.fastq} | \
             samtools view -b > {output}'
-    
+
 rule sort_bam:
     input: 'alignments/{sample}_sup.unsorted.bam'
     output: 'alignments/{sample}_sup.sorted.bam'
     threads: 10
     shell: 'samtools sort -@ {threads} -o {output} {input}'
-    
+
 rule index_bam:
     input: 'alignments/{sample}_sup.sorted.bam'
     output: 'alignments/{sample}_sup.sorted.bam.bai'
     shell: 'samtools index {input}'
-    
+
 rule stats_bam:
     input: 'alignments/{sample}_sup.sorted.bam'
     output: 'alignments/{sample}_sup.sorted.bam.stats'
     shell: 'samtools stats {input} > {output}'
-    
+
+def prepare_inputs_repeathmm(wildcards):
+    analysis_setting = config['analysis'][wildcards.analysis]
+    sample = analysis_setting['source']
+    return {
+        'patternfile': config['options']['repeat_presets'],
+        'bam': f'alignments/{sample}_sup.sorted.bam',
+        'bai': f'alignments/{sample}_sup.sorted.bam.bai',
+        'reference': os.path.abspath(f'{REFERENCE}.genome.fa.gz')
+    }
+
 rule count_repeat_repeathmm:
-    input:
-        patternfile = 'GRCh38.v39.predefined.pa',
-        bam = 'alignments/{sample}_sup.sorted.bam',
-        reference = 'reference/GRCh38.v39.genome.fa.gz'
-    output: 'logbam/RepBAM_{gene}.gmm_GapCorrection1_FlankLength30_SplitAndReAlign1_2_7_4_80_10_100_hg38_comp_{sample}_I0.120_D0.020_S0.020.log'
-    run: 
-        targetgene = TARGETGENE
-        sampleid = SAMPLE
-        shell('./cdrun.sh repeathmmenv {REPEATHMM_CMD} BAMinput --repeatName {targetgene} \
-                --GapCorrection 1 --FlankLength 30 --UserDefinedUniqID {sampleid} \
-                --Onebamfile {input.bam} --outFolder {output} \
+    input: unpack(prepare_inputs_repeathmm)
+    output: 'analyses/{analysis}/result.log'
+    params:
+        tmpdir='analyses/{analysis}/tmp',
+        logbam='logbam'
+    run:
+        analysis_setting = config['analysis'][wildcards.analysis]
+        sample = analysis_setting['source']
+        gene = analysis_setting['target']
+        if not os.path.isdir(params.tmpdir):
+            os.makedirs(params.tmpdir)
+        if os.path.isdir(params.logbam):
+            shell('rm -rf {params.logbam}')
+        os.makedirs(params.logbam)
+
+        shell(f'conda run --no-capture-output -n {config["programs"]["repeathmm_condaenv"]} \
+                python2 {config["programs"]["repeathmm"]} BAMinput --repeatName {gene} \
+                --GapCorrection 1 --FlankLength 30 --UserDefinedUniqID {wildcards.analysis} \
+                --Onebamfile {input.bam} --outFolder {params.tmpdir}/ \
                 --Patternfile {input.patternfile} \
                 --hgfile {input.reference}')
-                
+        shell('mv {params.logbam}/RepBAM_{gene}.gmm*_{sample}_*.log {output}')
+
 rule plot_repeat_count_histogram:
-    input: 'logbam/RepBAM_{gene}.gmm_GapCorrection1_FlankLength30_SplitAndReAlign1_2_7_4_80_10_100_hg38_comp_{sample}_I0.120_D0.020_S0.020.log'
-    output: '{sample}_{gene}_RepeatCount.png'
-    shell: 'python pyscripts/plotRepeatCount.py {input}'
-    
+    input: 'analyses/{analysis}/result.log'
+    output: 'plots/RepeatCount-{analysis}.png'
+    shell: 'python pyscripts/plotRepeatCount.py {input} {output}'
