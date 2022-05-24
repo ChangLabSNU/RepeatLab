@@ -14,14 +14,15 @@ hist_dict = {}
 
 with open(input_log) as logfile:
     for line in logfile:
-        repeat_count = re.findall(repeat_count_pat, line)
-        if len(repeat_count) != 0:
-            count_li = [c.strip(',') for c in repeat_count]
-            for s in count_li:
-                count_set = s.split(':')
-                repeat_len = int(count_set[0])
-                read_num = int(count_set[1])
-                hist_dict[repeat_len] = read_num
+        if line.startswith('INFO:   p2bamhmm'):
+            repeat_count = re.findall(repeat_count_pat, line)
+            if len(repeat_count) != 0:
+                count_li = [c.strip(',') for c in repeat_count]
+                for s in count_li:
+                    count_set = s.split(':')
+                    repeat_len = int(count_set[0])
+                    read_num = int(count_set[1])
+                    hist_dict[repeat_len] = read_num
 
         sampleid_sen = re.findall(sampleid_pat, line)
         if len(sampleid_sen) != 0:
