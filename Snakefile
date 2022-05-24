@@ -25,7 +25,7 @@ rule guppy_basecall:
                    -s {params.outputdir} --compress_fastq --disable_pings \
                    --min_qscore {bcopts["min_qscore"]} \
                    --gpu_runners_per_device {bcopts["gpu_runners"]} \
-                   --num_callers {bcopts["num_callers"]}')
+                   --num_callers {bcopts["num_callers"]} --pt_scaling')
        shell('zcat {params.outputdir}/pass/fastq_*.fastq.gz | \
               bgzip -@ {threads} -c > {output}')
 
