@@ -85,7 +85,8 @@ rule count_repeat_repeathmm:
                 --GapCorrection 1 --FlankLength 30 --UserDefinedUniqID {wildcards.analysis} \
                 --Onebamfile {input.bam} --outFolder {params.tmpdir}/ \
                 --Patternfile {input.patternfile} \
-                --hgfile {input.reference}')
+                --hgfile {input.reference} \
+                --SplitAndReAlign 2 --SeqTech Nanopore --outlog DEBUG')
         shell('mv {params.logbam}/RepBAM_{gene}.gmm*_{sample}_*.log {output}')
 
 rule plot_repeat_count_histogram:
