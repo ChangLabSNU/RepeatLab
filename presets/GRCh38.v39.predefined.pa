@@ -1,4 +1,0 @@
-#0.Name, 1.chr, 2.start-pos, 3.end-pos, 4.pattern, 5.strand, 6.range, 7.others
-cnbp,chr3,129172577,129172696,CAGG,-20,10-30:55+,
-dmpk,chr19,45770205,45770264,CTG,-20,5-37:50+,
-nop56,chr20,2652734,2652780,GGCCTG,+8,3-14:650-2500,

@@ -1,0 +1,92 @@
+FULLREFGENOME = '../reference/GRCh38.v44.genome.fa.gz'
+TARGET_CHROMOSOMES = ['chr19']
+
+import os
+ANALYSES = os.listdir('../analyses/')
+
+CUDA_DEVICE = 'cuda:3'
+
+DORADO_ORIGINAL_MODEL = '~/gh/dorado/basecalling_models/dna_r9.4.1_e8_sup@v3.3'
+DORADO_5MC_MODEL = '~/gh/dorado/basecalling_models/dna_r9.4.1_e8_sup@v3.3_5mCG@v0'
+
+# Run all commands in conda environment "dorado"
+shell.prefix('set -o pipefail; export CUDA_DEVICE_ORDER="PCI_BUS_ID" \
+; eval "$(conda shell.bash hook)"; conda activate dorado; ')
+
+rule all:
+    input: 
+        expand('reference/target_ref_genome.{suffix}', suffix=['fa', 'mmi']),
+        expand('../on-target/phased_readID_list/{analysis}.allele{num}.readID.txt', analysis=ANALYSES, num=[1,2]),
+        expand('basecall/{analysis}.allele{num}.meth-called.bam', analysis=ANALYSES, num=[1,2]),
+        expand('alignments/{analysis}.allele{num}.meth-aligned.bam', analysis=ANALYSES, num=[1,2]),
+        expand('alignments/{analysis}.allele{num}.meth-aligned.sorted.bam', analysis=ANALYSES, num=[1,2]),
+        expand('{analysis}.allele{num}.meth-called.tsv', analysis=ANALYSES, num=[1,2])
+
+rule uncompress_genome:
+    input: FULLREFGENOME
+    output: temp('reference/full_ref_genome.fa.gz')
+    priority: 100
+    shell: 'gunzip -c {input} > {output}'
+
+rule extract_genome_chromosomes:
+    input: 'reference/full_ref_genome.fa.gz'
+    output: 'reference/target_ref_genome.fa'
+    priority: 99
+    shell: 'samtools faidx {input} {TARGET_CHROMOSOMES} > {output}'
+
+rule build_minimap_index:
+    input: 'reference/target_ref_genome.fa'
+    output: 'reference/target_ref_genome.mmi'
+    priority: 98
+    shell: 'minimap2 -x map-ont -d {output} {input}'
+
+rule basecall_dorado_5mC:
+    input:
+        read_ids='../on-target/phased_readID_list/{analysis}.allele{num}.readID.txt'
+    output: 'basecall/{analysis}.allele{num}.meth-called.bam'
+    priority: 97
+    run:
+        sample = str(wildcards.analysis).split('-')[0]
+        datadir=f'../raw_pod5/{sample}/'
+        shell('dorado basecaller -x {CUDA_DEVICE} --batchsize 128 --chunksize 80000 \
+                -l {input.read_ids} -r \
+                --modified-bases-models {DORADO_5MC_MODEL} \
+                --emit-sam --emit-moves {DORADO_ORIGINAL_MODEL} \
+                {datadir} | samtools view -b -o {output}')
+
+rule align_sequences:
+    input: 
+        basecalls='basecall/{analysis}.allele{num}.meth-called.bam',
+        index='reference/target_ref_genome.mmi'
+    output: 'alignments/{analysis}.allele{num}.meth-aligned.bam'
+    threads: 32
+    priority: 96
+    shell: 'dorado aligner -t {threads} {input.index} {input.basecalls} > {output}'
+
+rule sort_alignments:
+    input: 'alignments/{analysis}.allele{num}.meth-aligned.bam'
+    output: 'alignments/{analysis}.allele{num}.meth-aligned.sorted.bam'
+    priority: 95
+    shell: 'samtools sort --write-index -o {output} {input}'
+
+rule pileup_methylated_sites:
+    input:
+        alignments='alignments/{analysis}.allele{num}.meth-aligned.sorted.bam',
+        reference='reference/target_ref_genome.fa'
+    output: temp('{analysis}.allele{num}.meth-called.bedMethyl')
+    priority: 94
+    shell: 'modkit pileup --no-filtering --combine-strands --cpg \
+            --ref {input.reference} {input.alignments} {output}'
+
+rule tabularize_bedmethyl:
+    input: '{analysis}.allele{num}.meth-called.bedMethyl'
+    output: '{analysis}.allele{num}.meth-called.tsv'
+    priority: 93
+    shell: '(echo "chrom\tposition\tcoverage\tmethylation_pct"; \
+             awk -vOFS=\'\\t\' \'{{print $1, $2, $10, $11}}\' \
+             {input}) > {output}'
+
+rule clean:
+    priority: 1
+    shell: 'rm -rf alignments basecall reference'
+
