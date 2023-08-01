@@ -1,6 +1,8 @@
 data:
   sources:
+    DM01: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/F_DMPK_DM01/
     DM12: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/F_DMPK_DM12/
+    DM17: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/F_DMPK_DM17/
     DM49: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_DMPK_CNBP_DM49/
     DM97: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM97/
     DM98: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM98/
@@ -15,7 +17,12 @@ data:
     DM157: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_DM157/
     NA04034: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_NA04034/
     NA03759: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_NA03759/
-    NA03697: /qbio/yoojung/repeat-expansion-all/raw_data/S_DMPK_NA03697-1/
+    NA03697_MinION_single: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03697/Spoton_DMPK/
+    NA03697_MinION_multi: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03697/Spoton_DMPK_CNBP/
+    NA03697_Flongle_single: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03697/Flongle_DMPK/
+    NA03697_Flongle_multi: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03697/Flongle_DMPK_CNBP/
+    NA03991_MinION_single: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03991/Spotnon_DMPK/
+    NA03991_MinION_multi: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03991/Spoton_DMPK_CNBP/
   #   ATA24: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_NOP56_ATA24/
   #   MR27: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_NOP56_MR27/
   #   UDPA018: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_NOP56_UDP_A018/
@@ -27,63 +34,69 @@ data:
     DM112: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM112/
 
 analysis:
+  DM01-DMPK:
+    source: 'DM01'
+    target: 'DMPK'
   DM12-DMPK:
     source: 'DM12'
+    target: 'DMPK'
+  DM17-DMPK:
+    source: 'DM17'
     target: 'DMPK'
   DM49-DMPK:
     source: 'DM49'
     target: 'DMPK'
-  # DM49-CNBP:
-  #   source: 'DM49'
-  #   target: 'CNBP' 
+  DM49-CNBP:
+    source: 'DM49'
+    target: 'CNBP' 
   DM97-DMPK:
     source: 'DM97'
     target: 'DMPK'
-  # DM97-CNBP:
-  #   source: 'DM97'
-  #   target: 'CNBP'
+  DM97-CNBP:
+    source: 'DM97'
+    target: 'CNBP'
   DM98-DMPK:
     source: 'DM98'
     target: 'DMPK'
-  # DM98-CNBP:
-  #   source: 'DM98'
-  #   target: 'CNBP'
+  DM98-CNBP:
+    source: 'DM98'
+    target: 'CNBP'
   DM105-DMPK:
     source: 'DM105'
     target: 'DMPK'
-  # DM105-CNBP:
-  #   source: 'DM105'
-  #   target: 'CNBP'
+  DM105-CNBP:
+    source: 'DM105'
+    target: 'CNBP'
   DM110-DMPK:
     source:  'DM110'
     target: 'DMPK'
-  # DM110-CNBP:
-  #   source: 'DM110'
-  #   target: 'CNBP'
+  DM110-CNBP:
+    source: 'DM110'
+    target: 'CNBP'
   DM111-DMPK:
     source: 'DM111'
     target: 'DMPK'
-  # DM111-CNBP:
-  #   source: 'DM111'
-  #   target: 'CNBP'
+  DM111-CNBP:
+    source: 'DM111'
+    target: 'CNBP'
   DM112-DMPK:
     source: 'DM112'
     target: 'DMPK'
-  # DM112-CNBP:
-  #   source: 'DM112'
-  #   target: 'CNBP'
+  DM112-CNBP:
+    source: 'DM112'
+    target: 'CNBP'
   DM113-DMPK:
     source: 'DM113'
     target: 'DMPK'
-  # DM113-CNBP:
-  #   source: 'DM113'
-  #   target: 'CNBP'
+  DM113-CNBP:
+    source: 'DM113'
+    target: 'CNBP'
   DM115-DMPK:
     source: 'DM115'
     target: 'DMPK'
-  # DM115-CNBP:
-  #   source: 'DM115'
-  #   target: 'CNBP'
+  DM115-CNBP:
+    source: 'DM115'
+    target: 'CNBP'
   DM138-DMPK:
     source: 'DM138'
     target: 'DMPK'
@@ -105,9 +118,33 @@ analysis:
   NA03759-DMPK:
     source: 'NA03759'
     target: 'DMPK'
-  NA03697-DMPK:
-    source: 'NA03697'
+  NA03697_MinION_single-DMPK:
+    source: 'NA03697_MinION_single'
     target: 'DMPK'
+  NA03697_MinION_multi-DMPK:
+    source: 'NA03697_MinION_multi'
+    target: 'DMPK'
+  NA03697_MinION_multi-CNBP:
+    source: 'NA03697_MinION_multi'
+    target: 'CNBP'
+  NA03697_Flongle_single-DMPK:
+    source: 'NA03697_Flongle_single'
+    target: 'DMPK'
+  NA03697_Flongle_multi-DMPK:
+    source: 'NA03697_Flongle_multi'
+    target: 'DMPK'
+  NA03697_Flongle_multi-CNBP:
+    source: 'NA03697_Flongle_multi'
+    target: 'CNBP'
+  NA03991_MinION_single-DMPK:
+    source: 'NA03991_MinION_single'
+    target: 'DMPK'
+  NA03991_MinION_multi-DMPK:
+    source: 'NA03991_MinION_multi'
+    target: 'DMPK'
+  NA03991_MinION_multi-CNBP:
+    source: 'NA03991_MinION_multi'
+    target: 'CNBP'
   # ATA24-NOP56:
   #   source: 'ATA24'
   #   target: 'NOP56'
