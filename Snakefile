@@ -11,6 +11,7 @@ rule all:
         expand('basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.demultiplexed.fast-called.fastq.gz', sample_mtplx=SAMPLES_MTPLX),
         expand('alignments/{sample}.fast-aligned.sorted.bam', sample=SAMPLES+SAMPLES_MTPLX),
         expand('alignments/{sample}.fast-aligned.sorted.bam.bai', sample=SAMPLES+SAMPLES_MTPLX),
+        expand('alignments/{sample}.fast-aligned.sorted.bam.stats', sample=SAMPLES+SAMPLES_MTPLX),
         expand('on-target/readID_list/{analysis}.ontarget.readID.txt', analysis=config['analysis']),
         expand('basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam', analysis=config['analysis']),
         expand('alignments/{analysis}.sup-aligned.sorted.bam', analysis=config['analysis']),
@@ -84,6 +85,12 @@ rule index_alignment_first:
     priority: 95
     shell: 'samtools index {input}'
 
+rule stats_alignment_first:
+    input: 'alignments/{sample}.fast-aligned.sorted.bam'
+    output: 'alignments/{sample}.fast-aligned.sorted.bam.stats'
+    priority: 94
+    shell: 'samtools stats {input} > {output}'
+
 def prepare_inputbam_ontarget(wildcards):
     analysis_setting = config['analysis'][wildcards.analysis]
     sample = analysis_setting['source']
@@ -95,7 +102,7 @@ def prepare_inputbam_ontarget(wildcards):
 rule extract_ontarget_reads:
     input: unpack(prepare_inputbam_ontarget)
     output: 'on-target/readID_list/{analysis}.ontarget.readID.txt'
-    priority: 94
+    priority: 93
     run:
         target_gene = str(wildcards.analysis).split('-')[1]
         target_region = config['options']['on-target_extraction'][target_gene]['region']
@@ -105,7 +112,7 @@ rule dorado_basecall_second:
     input: unpack(prepare_inputbam_ontarget)
     output: 'basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam'
     threads: 10
-    priority: 93
+    priority: 92
     run:
         readID = 'on-target/readID_list/{wildcards.analysis}.ontarget.readID.txt'
         bcopts = config['options']['second_basecalling']
@@ -120,7 +127,7 @@ rule align_second:
         index=f'{REFERENCE}.genome.mm2.idx'
     output: temp('alignments/{analysis}.sup-aligned.unsorted.bam')
     threads: 32
-    priority: 92
+    priority: 91
     run:
         shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
                 dorado aligner -t {threads} {input.index} {input.bam} > {output}')
@@ -129,13 +136,13 @@ rule sort_alignment_second:
     input: 'alignments/{analysis}.sup-aligned.unsorted.bam'
     output: 'alignments/{analysis}.sup-aligned.sorted.bam'
     threads: 10
-    priority: 91
+    priority: 90
     shell: 'samtools sort -@ {threads} -o {output} {input}'
 
 rule index_alignment_second:
     input: 'alignments/{analysis}.sup-aligned.sorted.bam'
     output: 'alignments/{analysis}.sup-aligned.sorted.bam.bai'
-    priority: 90
+    priority: 89
     shell: 'samtools index {input}'
 
 def prepare_inputs_repeathmm(wildcards):
@@ -158,7 +165,7 @@ rule run_repeathmm:
     params:
         tmpdir='analyses/{analysis}/tmp',
         logbam='logbam'
-    priority: 89
+    priority: 88
     run:
         analysis_setting = config['analysis'][wildcards.analysis]
         sample = analysis_setting['source']
