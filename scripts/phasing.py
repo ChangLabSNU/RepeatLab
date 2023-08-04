@@ -29,7 +29,7 @@ sample_repeats = np.array(rc)
 l10_sample_repeats = np.log10(sample_repeats)
 
 def GMM_clustering(l10_sample_repeats, NUM_ALLELES):
-    sample_gmm = GaussianMixture(NUM_ALLELES).fit(l10_sample_repeats[:, np.newaxis])
+    sample_gmm = GaussianMixture(NUM_ALLELES, random_state=1).fit(l10_sample_repeats[:, np.newaxis])
     gmm_labels = np.argsort(sample_gmm.means_.ravel())
     gmmidx2label = {gmmidx: label for label, gmmidx in enumerate(gmm_labels)}
     gmm_means = sample_gmm.means_[gmm_labels]
