@@ -14,6 +14,7 @@ rule all:
         expand('alignments/{sample}.fast-aligned.sorted.bam.stats', sample=SAMPLES+SAMPLES_MTPLX),
         expand('on-target/readID_list/{analysis}.ontarget.readID.txt', analysis=config['analysis']),
         expand('basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam', analysis=config['analysis']),
+        expand('basecalls/dorado/sup_v3.6/{analysis}.sup-called.summary.txt', analysis=config['analysis']),
         expand('alignments/{analysis}.sup-aligned.sorted.bam', analysis=config['analysis']),
         expand('alignments/{analysis}.sup-aligned.sorted.bam.bai', analysis=config['analysis']),
         expand('analyses/{analysis}/result.log', analysis=config['analysis']),
@@ -121,13 +122,21 @@ rule dorado_basecall_second:
                  -r --emit-sam --emit-moves {bcopts["model"]} {input.pod5} -l {readID} \
                 | samtools view -b -o {output}')
 
+rule dorado_summary:
+    input: 'basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam'
+    output: 'basecalls/dorado/sup_v3.6/{analysis}.sup-called.summary.txt'
+    priority: 91
+    run:
+        shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
+                dorado summary {input} > {output}')
+
 rule align_second:
     input:
         bam='basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam',
         index=f'{REFERENCE}.genome.mm2.idx'
     output: temp('alignments/{analysis}.sup-aligned.unsorted.bam')
     threads: 32
-    priority: 91
+    priority: 90
     run:
         shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
                 dorado aligner -t {threads} {input.index} {input.bam} > {output}')
@@ -136,13 +145,13 @@ rule sort_alignment_second:
     input: 'alignments/{analysis}.sup-aligned.unsorted.bam'
     output: 'alignments/{analysis}.sup-aligned.sorted.bam'
     threads: 10
-    priority: 90
+    priority: 89
     shell: 'samtools sort -@ {threads} -o {output} {input}'
 
 rule index_alignment_second:
     input: 'alignments/{analysis}.sup-aligned.sorted.bam'
     output: 'alignments/{analysis}.sup-aligned.sorted.bam.bai'
-    priority: 89
+    priority: 88
     shell: 'samtools index {input}'
 
 def prepare_inputs_repeathmm(wildcards):
@@ -165,7 +174,7 @@ rule run_repeathmm:
     params:
         tmpdir='analyses/{analysis}/tmp',
         logbam='logbam'
-    priority: 88
+    priority: 87
     run:
         analysis_setting = config['analysis'][wildcards.analysis]
         sample = analysis_setting['source']
