@@ -1,5 +1,5 @@
 # RepeatLab v1.0
-<p align="center"><img src="https://github.com/ChangLabSNU/repeat-expansion-diagnosis/RepeatLab_logo.png" height="350"/></p>
+<p align="center"><img src="https://github.com/ChangLabSNU/RepeatLab/blob/main/RepeatLab_logo.png" height="350"/></p>
 Long-read sequencing data analysis for repeat expansion diseases diagnosis based on Google Colab.
 
 ### Features
@@ -10,10 +10,10 @@ Long-read sequencing data analysis for repeat expansion diseases diagnosis based
 
 
 ### Try RepeatLab
-[RepeatLab v1.0](https://colab.research.google.com/github/ChangLabSNU/repeat-expansion-diagnosis/blob/main/RepeatLab.ipynb)
+[RepeatLab v1.0](https://colab.research.google.com/github/ChangLabSNU/RepeatLab/blob/main/RepeatLab.ipynb)
 
 ### Troubleshooting
-If you encounter any errors using RepeatLab, please report the trouble issues at [Issues](https://github.com/ChangLabSNU/repeat-expansion-diagnosis/issues).
+If you encounter any errors using RepeatLab, please report the trouble issues at [Issues](https://github.com/ChangLabSNU/RepeatLab/issues).
 
 ### Citing RepeatLab
 A pre-print is going to be uploaded soon.
