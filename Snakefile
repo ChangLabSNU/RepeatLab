@@ -1,63 +1,76 @@
 configfile: 'config.yml'
 
 SAMPLES = list(config['data']['sources'])
-SAMPLES_MTPLX = list(config['data']['sources_multiplex'])
 REFERENCE = config['options']['reference']
 
 rule all:
     input:
-        expand('raw_pod5/{sample}/', sample=SAMPLES+SAMPLES_MTPLX),
-        expand('basecalls/dorado/fast/{sample}/{sample}.fast-called.fastq.gz', sample=SAMPLES+SAMPLES_MTPLX),
-        expand('basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.demultiplexed.fast-called.fastq.gz', sample_mtplx=SAMPLES_MTPLX),
-        expand('alignments/{sample}.fast-aligned.sorted.bam', sample=SAMPLES+SAMPLES_MTPLX),
-        expand('alignments/{sample}.fast-aligned.sorted.bam.bai', sample=SAMPLES+SAMPLES_MTPLX),
-        expand('alignments/{sample}.fast-aligned.sorted.bam.stats', sample=SAMPLES+SAMPLES_MTPLX),
+        expand('raw_pod5/{sample}/', sample=SAMPLES),
+        expand('basecalls/dorado/fast/{sample}/{sample}.fast-called.bam', sample=SAMPLES),
+        # expand('basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.demultiplexed.fast-called.bam', sample_mtplx=SAMPLES_MTPLX),
+        expand('basecalls/dorado/fast/{sample}/{sample}.fast-called.summary.txt', sample=SAMPLES),
+        expand('alignments/{sample}.fast-aligned.sorted.bam', sample=SAMPLES),
+        expand('alignments/{sample}.fast-aligned.sorted.bam.bai', sample=SAMPLES),
+        expand('alignments/{sample}.fast-aligned.sorted.bam.stats', sample=SAMPLES),
         expand('on-target/readID_list/{analysis}.ontarget.readID.txt', analysis=config['analysis']),
         expand('basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam', analysis=config['analysis']),
         expand('basecalls/dorado/sup_v3.6/{analysis}.sup-called.summary.txt', analysis=config['analysis']),
         expand('alignments/{analysis}.sup-aligned.sorted.bam', analysis=config['analysis']),
         expand('alignments/{analysis}.sup-aligned.sorted.bam.bai', analysis=config['analysis']),
         expand('analyses/{analysis}/result.log', analysis=config['analysis']),
-        expand('on-target/phased_readID_list/{analysis}.allele{num}.readID.txt', analysis=config['analysis'], num=[1,2])
+        expand('on-target/phased_readID_list/{analysis}.allele{num}.readID.txt', analysis=config['analysis'], num=[1,2]),
+        expand('reference/{analysis}_target_ref_genome.{suffix}', suffix=['fa', 'mmi'], analysis=config['analysis']),
+        expand('on-target/phased_readID_list/{analysis}.allele{num}.readID.txt', analysis=config['analysis'], num=[1,2]),
+        expand('basecalls/mod/{analysis}.allele{num}.meth-called.bam', analysis=config['analysis'], num=[1,2]),
+        expand('alignments/{analysis}.allele{num}.meth-aligned.bam', analysis=config['analysis'], num=[1,2]),
+        expand('alignments/{analysis}.allele{num}.meth-aligned.sorted.bam', analysis=config['analysis'], num=[1,2]),
+        expand('meth-profiles/{analysis}.allele{num}.meth-called.bedMethyl', analysis=config['analysis'], num=[1,2]),
+        expand('meth-profiles/{analysis}.allele{num}.meth-called.tsv', analysis=config['analysis'], num=[1,2]),        
+        expand('analyses/{analysis}/result.html', analysis=config['analysis'])
 
 rule convert_fast5_to_pod5:
     output: directory('raw_pod5/{sample}/')
     priority: 100
     run:
-        if wildcards.sample in SAMPLES:
-            srcdir = config['data']['sources'][wildcards.sample]
-        elif wildcards.sample in SAMPLES_MTPLX:
-            srcdir = config['data']['sources_multiplex'][wildcards.sample]
+        srcdir = config['data']['sources'][wildcards.sample]
         shell(f'conda run --no-capture-output -n {config["programs"]["pod5_condaenv"]} \
                 pod5 convert fast5 -o {output} -r {srcdir} --one-to-one {srcdir}')
 
-ruleorder: dorado_basecall_first > demultiplex
+# ruleorder: dorado_basecall_first > demultiplex
 
 rule dorado_basecall_first:
     input: 'raw_pod5/{sample}/'
-    output: 'basecalls/dorado/fast/{sample}/{sample}.fast-called.fastq.gz'
+    output: 'basecalls/dorado/fast/{sample}/{sample}.fast-called.bam'
     threads: 10
     priority: 99
     run:
         bcopts = config['options']['first_basecalling']
-        shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
-                dorado basecaller -x {bcopts["cuda_devices"]} -r --emit-fastq {bcopts["model"]} {input} \
-                | bgzip -@ {threads} -c > {output}')
+        shell(f'{config["programs"]["dorado"]} basecaller -x {bcopts["cuda_devices"]} -r --emit-sam {bcopts["model"]} {input} \
+                | samtools view -b -o {output}')
 
-rule demultiplex:
-    output: 'basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.demultiplexed.fast-called.fastq.gz'
-    threads: 10
-    priority: 98
+# rule demultiplex:
+#     output: 'basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.demultiplexed.fast-called.bam'
+#     threads: 10
+#     priority: 98
+#     run:
+#         inputdir='basecalls/dorado/fast/{wildcards.sample_mtplx}/'
+#         outputdir='basecalls/dorado/fast/{wildcards.sample_mtplx}_multiplexing/'
+#         bcopts = config['options']['demultiplexing']
+#         barcode_kit = bcopts['barcode_kit']
+#         barcode_num = bcopts['barcode_num'][wildcards.sample_mtplx]
+#         shell(f'{config["programs"]["guppy_barcoder"]} -i {inputdir} --disable_pings -t {threads} -x cuda:6,7 \
+#                 --barcode_kits {barcode_kit} --compress_fastq -s {outputdir}')
+#         shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
+#                 dorado demux --kit-name {barcode_kit} --output-dir {outputdir} {output}')
+#         shell(f'zcat {outputdir}/{barcode_num}/fastq_*.fastq.gz | \
+#                 bgzip -@ {threads} -c > {output}')     
+
+rule dorado_summary_first:
+    input: 'basecalls/dorado/fast/{sample}/{sample}.fast-called.bam'
+    output: 'basecalls/dorado/fast/{sample}/{sample}.fast-called.summary.txt'
+    priority: 91
     run:
-        inputdir='basecalls/dorado/fast/{wildcards.sample_mtplx}/'
-        outputdir='basecalls/dorado/fast/{wildcards.sample_mtplx}_multiplexing/'
-        bcopts = config['options']['demultiplexing']
-        barcode_kit = bcopts['barcode_kit']
-        barcode_num = bcopts['barcode_num'][wildcards.sample_mtplx]
-        shell(f'{config["programs"]["guppy_barcoder"]} -i {inputdir} --disable_pings -t {threads} -x cuda:6,7 \
-                --barcode_kits {barcode_kit} --compress_fastq -s {outputdir}')
-        shell(f'zcat {outputdir}/{barcode_num}/fastq_*.fastq.gz | \
-                bgzip -@ {threads} -c > {output}')     
+        shell(f'{config["programs"]["dorado"]} summary {input} > {output}')
 
 rule align_first:
     input:
@@ -66,12 +79,8 @@ rule align_first:
     threads: 32
     priority: 97
     run:
-        if wildcards.sample in SAMPLES:
-            fastq = 'basecalls/dorado/fast/{wildcards.sample}/{wildcards.sample}.fast-called.fastq.gz'
-        elif wildcards.sample in SAMPLES_MTPLX:
-            fastq = 'basecalls/dorado/fast/{wildcards.sample}/{wildcards.sample}.demultiplexed.fast-called.fastq.gz'
-        shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
-                dorado aligner -t {threads} {input.index} {fastq} > {output}')
+        fast_basecalled = 'basecalls/dorado/fast/{wildcards.sample}/{wildcards.sample}.fast-called.bam'
+        shell(f'{config["programs"]["dorado"]} aligner -t {threads} {input.index} {fast_basecalled} > {output}')
 
 rule sort_alignment_first:
     input: 'alignments/{sample}.fast-aligned.unsorted.bam'
@@ -117,18 +126,16 @@ rule dorado_basecall_second:
     run:
         readID = 'on-target/readID_list/{wildcards.analysis}.ontarget.readID.txt'
         bcopts = config['options']['second_basecalling']
-        shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
-                dorado basecaller -x {bcopts["cuda_devices"]} --batchsize 128 --chunksize 80000 \
-                 -r --emit-sam --emit-moves {bcopts["model"]} {input.pod5} -l {readID} \
+        shell(f'{config["programs"]["dorado"]} basecaller -x {bcopts["cuda_devices"]} --batchsize 128 --chunksize 60000 \
+                 -r --emit-sam {bcopts["model"]} {input.pod5} -l {readID} \
                 | samtools view -b -o {output}')
 
-rule dorado_summary:
+rule dorado_summary_second:
     input: 'basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam'
     output: 'basecalls/dorado/sup_v3.6/{analysis}.sup-called.summary.txt'
     priority: 91
     run:
-        shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
-                dorado summary {input} > {output}')
+        shell(f'{config["programs"]["dorado"]} summary {input} > {output}')
 
 rule align_second:
     input:
@@ -138,8 +145,7 @@ rule align_second:
     threads: 32
     priority: 90
     run:
-        shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
-                dorado aligner -t {threads} {input.index} {input.bam} > {output}')
+        shell(f'{config["programs"]["dorado"]} aligner -t {threads} {input.index} {input.bam} > {output}')
 
 rule sort_alignment_second:
     input: 'alignments/{analysis}.sup-aligned.unsorted.bam'
@@ -187,7 +193,7 @@ rule run_repeathmm:
 
         shell(f'conda run --no-capture-output -n {config["programs"]["repeathmm_condaenv"]} \
                 python2.7 {config["programs"]["repeathmm"]} BAMinput --repeatName {gene} \
-                --GapCorrection 1 --FlankLength 30 --UserDefinedUniqID {wildcards.analysis} \
+                --MinSup 0 --GapCorrection 1 --FlankLength 30 --UserDefinedUniqID {wildcards.analysis} \
                 --Onebamfile {input.bam} --outFolder {params.tmpdir}/ \
                 --Patternfile {input.patternfile} \
                 --hgfile {input.reference} \
@@ -196,6 +202,84 @@ rule run_repeathmm:
 
 rule phasing:
     output: 'on-target/phased_readID_list/{analysis}.allele{num}.readID.txt'
+    priority: 86
     run: 
         shell(f'python scripts/phasing.py {wildcards.analysis}')
 
+rule uncompress_genome:
+    input: f'{REFERENCE}.genome.fa.gz'
+    output: temp('reference/full_ref_genome.fa.gz')
+    priority: 85
+    shell: 'gunzip -c {input} > {output}'
+
+rule extract_genome_chromosomes:
+    input: 'reference/full_ref_genome.fa.gz',
+    output: 'reference/{analysis}_target_ref_genome.fa'
+    priority: 84
+    run:
+        analysis_setting = config['analysis'][wildcards.analysis]
+        gene = analysis_setting['target']
+        target_chromosome=config['options']['on-target_extraction'][gene]['chromosome']
+
+        shell('samtools faidx {input} {target_chromosome} > {output}')
+
+rule build_minimap_index:
+    input: 'reference/{analysis}_target_ref_genome.fa'
+    output: 'reference/{analysis}_target_ref_genome.mmi'
+    priority: 83
+    shell: 'minimap2 -x map-ont -k 13 -w 20 -d {output} {input}'
+
+rule basecall_dorado_5mC:
+    input:
+        read_ids='on-target/phased_readID_list/{analysis}.allele{num}.readID.txt'
+    output: 'basecalls/mod/{analysis}.allele{num}.meth-called.bam'
+    priority: 82
+    run:
+        sample = str(wildcards.analysis).split('-')[0]
+        datadir=f'raw_pod5/{sample}/'
+        bcopts = config['options']['methylation_calling']
+        shell(f'{config["programs"]["dorado"]} basecaller -x {bcopts["cuda_devices"]} --batchsize 128 --chunksize 10000 \
+                -l {input.read_ids} -r \
+                --modified-bases-models {bcopts["dorado_5mCG_model"]} \
+                --emit-sam {bcopts["dorado_original_model"]} \
+                {datadir} | samtools view -b -o {output}')
+
+rule align_sequences:
+    input: 
+        basecalls='basecalls/mod/{analysis}.allele{num}.meth-called.bam',
+        index='reference/{analysis}_target_ref_genome.mmi'
+    output: 'alignments/{analysis}.allele{num}.meth-aligned.bam'
+    priority: 81
+    run: 
+        threads=32
+        shell(f'{config["programs"]["dorado"]} aligner -t {threads} {input.index} {input.basecalls} > {output}')
+
+rule sort_alignments:
+    input: 'alignments/{analysis}.allele{num}.meth-aligned.bam'
+    output: 'alignments/{analysis}.allele{num}.meth-aligned.sorted.bam'
+    priority: 80
+    shell: 'samtools sort --write-index -o {output} {input}'
+
+rule pileup_methylated_sites:
+    input:
+        alignments='alignments/{analysis}.allele{num}.meth-aligned.sorted.bam',
+        reference='reference/{analysis}_target_ref_genome.fa'
+    output: 'meth-profiles/{analysis}.allele{num}.meth-called.bedMethyl'
+    priority: 79
+    run: 
+        shell(f'{config["programs"]["modkit"]} pileup --no-filtering --combine-strands --cpg \
+                --ref {input.reference} {input.alignments} {output}')
+
+rule tabularize_bedmethyl:
+    input: 'meth-profiles/{analysis}.allele{num}.meth-called.bedMethyl'
+    output: 'meth-profiles/{analysis}.allele{num}.meth-called.tsv'
+    priority: 78
+    shell: '(echo "chrom\tposition\tcoverage\tmethylation_pct"; \
+             awk -vOFS=\'\\t\' \'{{print $1, $2, $10, $11}}\' \
+             {input}) > {output}'
+
+rule result_visualize:
+    input: 'analyses/{analysis}/result.log'
+    output: 'analyses/{analysis}/result.html'
+    run:
+        shell('python scripts/visualization.py {wildcards.analysis}')

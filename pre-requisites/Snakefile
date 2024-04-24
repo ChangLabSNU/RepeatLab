@@ -1,0 +1,81 @@
+GENCODE_RELEASE = '44'
+REFERENCE = 'GRCh38.v' + GENCODE_RELEASE
+REFERENCE_FASTA_URL = f'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{GENCODE_RELEASE}/GRCh38.p14.genome.fa.gz'
+REFERENCE_ANNOTATION_URL = f'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{GENCODE_RELEASE}/gencode.v{GENCODE_RELEASE}.annotation.gtf.gz'
+
+rule all:
+    input:
+        'RepeatHMM',
+        'dorado-0.6.0-linux-x64',
+        'dorado_models',
+        'dist',
+        # expand(f'reference/{REFERENCE}.genome.{{sufx}}',
+        #        sufx=['fa.gz', 'mm2.idx', 'fa.gz.amb', 'fa.gz.ann',
+        #              'fa.gz.bwt', 'fa.gz.pac', 'fa.gz.sa', 'fa.gz.fai']),
+        expand(f'reference/{REFERENCE}.genome.{{sufx}}',
+        sufx=['fa.gz', 'mm2.idx', 'rough.mm2.idx', 'fa.gz.fai'])
+        # expand(f'reference/{REFERENCE}.genome.gtf.gz')
+
+rule install_repeathmm:
+    output: directory('RepeatHMM')
+    run:
+        shell('git clone https://github.com/WGLab/RepeatHMM RepeatHMM')
+        shell('cd RepeatHMM/ && curl https://yoojung.qbio.io/repeat-expansion/repeathmm-environment.diff > repeathmm-environment.diff')
+        shell('cd RepeatHMM/ && curl https://yoojung.qbio.io/repeat-expansion/repeathmm-structure-dump.diff > repeathmm-structure-dump.diff')
+        shell('cd RepeatHMM/ && patch -p0 environment.yml repeathmm-environment.diff')
+        shell('cd RepeatHMM/bin/ && patch -p2 < ../repeathmm-structure-dump.diff')
+        shell('conda env create -n repeathmm -f RepeatHMM/environment.yml')
+        shell('conda install -n repeathmm -y swig')
+        shell('conda run -n repeathmm --no-capture-output pip install peakutils==1.0.3 hmmlearn==0.2.1 scikit-learn biopython==1.66')
+        shell('cd ~/conda/envs/repeathmm/lib && ln -s libcrypto.so.1.1 libcrypto.so.1.0.0')
+        shell('cd RepeatHMM/bin/RepeatHMM_scripts/UnsymmetricPairAlignment && conda run -n repeathmm --no-capture-output make')
+        
+rule install_dorado:
+    output: directory('dorado-0.6.0-linux-x64')
+    run:
+        shell('wget https://cdn.oxfordnanoportal.com/software/analysis/dorado-0.6.0-linux-x64.tar.gz')
+        shell('tar -xvf dorado-0.6.0-linux-x64.tar.gz')
+
+rule install_dorado_models:
+    output: directory('dorado_models')
+    run:
+        shell('dorado-0.6.0-linux-x64/bin/dorado download --directory dorado_models/')
+
+rule install_modkit:
+    output: directory('dist')
+    run:
+        shell('wget https://github.com/nanoporetech/modkit/releases/download/v0.2.7/modkit_v0.2.7_centos7_x86_64.tar.gz')
+        shell('tar -xvf modkit_v0.2.7_centos7_x86_64.tar.gz')
+        # shell('rm modkit_v0.2.7_centos7_x86_64.tar.gz')
+
+rule download_genome_fasta:
+    output: f'reference/{REFERENCE}.genome.fa.gz'
+    threads: 10
+    shell: 'curl {REFERENCE_FASTA_URL} | zcat | bgzip -c -@ {threads} > {output}'
+
+# rule download_genome_gtf:
+#     output: f'reference/{REFERENCE}.genome.gtf.gz'
+#     threads: 10
+#     shell: 'curl {REFERENCE_ANNOTATION_URL} | zcat | bgzip -c -@ {threads} > {output}'
+
+rule build_minimap2_genome_index:
+    input: f'reference/{REFERENCE}.genome.fa.gz'
+    output: f'reference/{REFERENCE}.genome.mm2.idx'
+    shell: 'zcat {input} | minimap2 -x map-ont -k 13 -w 20 -s 40 -d {output} /dev/stdin'
+
+rule build_minimap2_genome_index_rough:
+    input: f'reference/{REFERENCE}.genome.fa.gz'
+    output: f'reference/{REFERENCE}.genome.rough.mm2.idx'
+    shell: 'zcat {input} | minimap2 -x map-ont -k 20 -w 30 -s 40 -d {output} /dev/stdin'
+
+# rule build_bwa_genome_index:
+#     input: f'reference/{REFERENCE}.genome.fa.gz'
+#     output:
+#         expand(f'reference/{REFERENCE}.genome.fa.gz.{{sufx}}', sufx=['amb', 'ann', 'bwt', 'pac', 'sa'])
+#     shell: 'bwa index {input}'
+
+rule build_samtools_genome_index:
+    input: f'reference/{REFERENCE}.genome.fa.gz'
+    output: f'reference/{REFERENCE}.genome.fa.gz.fai'
+    shell: 'samtools faidx {input}'
+

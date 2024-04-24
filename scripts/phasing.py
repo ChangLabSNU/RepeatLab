@@ -8,7 +8,7 @@ NUM_ALLELES = 2
 
 sample_reads = {}
 
-with open(f'../analyses/{SAMPLE_TARGET}/result.log') as f:
+with open(f'analyses/{SAMPLE_TARGET}/result.log') as f:
     for line in f:
         if line.startswith('INFO: READ:'):
             fragments = line.split(' ')
@@ -68,10 +68,10 @@ sample_reads_df.insert(0, 'sample_id', SAMPLE_TARGET)
 allele1_reads = sample_reads_df[sample_reads_df['allele'] == 0]['read_id'].to_list()
 allele2_reads = sample_reads_df[sample_reads_df['allele'] == 1]['read_id'].to_list()
 
-with open(f'../on-target/phased_readID_list/{SAMPLE_TARGET}.allele1.readID.txt', 'w') as f:
+with open(f'on-target/phased_readID_list/{SAMPLE_TARGET}.allele1.readID.txt', 'w') as f:
     for read in allele1_reads:
         f.write(read + '\n')
 
-with open(f'../on-target/phased_readID_list/{SAMPLE_TARGET}.allele2.readID.txt', 'w') as f:
+with open(f'on-target/phased_readID_list/{SAMPLE_TARGET}.allele2.readID.txt', 'w') as f:
     for read in allele2_reads:
         f.write(read + '\n')

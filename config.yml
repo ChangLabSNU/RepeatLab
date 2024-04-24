@@ -1,198 +1,73 @@
 data:
   sources:
-    DM01: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/F_DMPK_DM01/
-    DM12: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/F_DMPK_DM12/
-    DM17: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/F_DMPK_DM17/
-    DM49: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_DMPK_CNBP_DM49/
-    DM97: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM97/
-    DM98: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM98/
-    DM110: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM110/
-    DM111: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM111/
-    DM113: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM113/
-    DM115: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM115/
-    DM138: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_DM138/
-    DM151: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_DM151/
-    DM153: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_DM153/
-    DM154: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_DM154/
-    DM157: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_DM157/
-    NA04034: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_NA04034/
-    NA03759: /vault/datasets/2022/20220607-SSLabMed-Nanopore2/DMPK_NA03759/
-    NA03697_MinION_single: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03697/Spoton_DMPK/
-    NA03697_MinION_multi: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03697/Spoton_DMPK_CNBP/
-    NA03697_Flongle_single: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03697/Flongle_DMPK/
-    NA03697_Flongle_multi: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03697/Flongle_DMPK_CNBP/
-    NA03991_MinION_single: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03991/Spotnon_DMPK/
-    NA03991_MinION_multi: /vault/datasets/2023/20230801_SMC_RepeatExpansion_controls/NA03991/Spoton_DMPK_CNBP/
-  #   ATA24: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_NOP56_ATA24/
-  #   MR27: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_NOP56_MR27/
-  #   UDPA018: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_NOP56_UDP_A018/
-  #   UDP009: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_NOP56_UDP009/
-  #   UDP009B1: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_NOP56_UDP009B1/
-  #   UDP022_RE: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/S_NOP56_UDP022_RE/
-  sources_multiplex:
-    DM105: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM105/
-    DM112: /vault/datasets/2022/20220203-SSLabMed-Nanopore/fast5/DMPK_DM112/
+    ## 1.
+    ## WRITE DOWN YOUR SAMPLE NAME AND PATH HERE ##
+    ## YOU CAN ADD MULTIPLE SAMPLES ##
 
+    ## EXAMPLE ##
+    # Patient1: /raw_data/Nanopore_data/Patient1/
+
+  sources_multiplex:
+    ## 1-1.
+    ## DEMULTIPLEXING IS NOT SUPPORTED YET.
+    ## IF YOU WANT TO DO BARCODE DEMULTIPLEXING, WRITE DOWN YOUR SAMPLE NAME AND PATH HERE ##
+    ## YOU CAN ADD MULTIPLE SAMPLES ##
+
+    ## EXAMPLE ##
+    # Patient2_3: /raw_data/Nanopore_data/Patient2_3/
+
+    
 analysis:
-  DM01-DMPK:
-    source: 'DM01'
-    target: 'DMPK'
-  DM12-DMPK:
-    source: 'DM12'
-    target: 'DMPK'
-  DM17-DMPK:
-    source: 'DM17'
-    target: 'DMPK'
-  DM49-DMPK:
-    source: 'DM49'
-    target: 'DMPK'
-  DM49-CNBP:
-    source: 'DM49'
-    target: 'CNBP' 
-  DM97-DMPK:
-    source: 'DM97'
-    target: 'DMPK'
-  DM97-CNBP:
-    source: 'DM97'
-    target: 'CNBP'
-  DM98-DMPK:
-    source: 'DM98'
-    target: 'DMPK'
-  DM98-CNBP:
-    source: 'DM98'
-    target: 'CNBP'
-  DM105-DMPK:
-    source: 'DM105'
-    target: 'DMPK'
-  DM105-CNBP:
-    source: 'DM105'
-    target: 'CNBP'
-  DM110-DMPK:
-    source:  'DM110'
-    target: 'DMPK'
-  DM110-CNBP:
-    source: 'DM110'
-    target: 'CNBP'
-  DM111-DMPK:
-    source: 'DM111'
-    target: 'DMPK'
-  DM111-CNBP:
-    source: 'DM111'
-    target: 'CNBP'
-  DM112-DMPK:
-    source: 'DM112'
-    target: 'DMPK'
-  DM112-CNBP:
-    source: 'DM112'
-    target: 'CNBP'
-  DM113-DMPK:
-    source: 'DM113'
-    target: 'DMPK'
-  DM113-CNBP:
-    source: 'DM113'
-    target: 'CNBP'
-  DM115-DMPK:
-    source: 'DM115'
-    target: 'DMPK'
-  DM115-CNBP:
-    source: 'DM115'
-    target: 'CNBP'
-  DM138-DMPK:
-    source: 'DM138'
-    target: 'DMPK'
-  DM151-DMPK:
-    source: 'DM151'
-    target: 'DMPK'
-  DM153-DMPK:
-    source: 'DM153'
-    target: 'DMPK'
-  DM154-DMPK:
-    source: 'DM154'
-    target: 'DMPK'
-  DM157-DMPK:
-    source: 'DM157'
-    target: 'DMPK'
-  NA04034-DMPK:
-    source: 'NA04034'
-    target: 'DMPK'
-  NA03759-DMPK:
-    source: 'NA03759'
-    target: 'DMPK'
-  NA03697_MinION_single-DMPK:
-    source: 'NA03697_MinION_single'
-    target: 'DMPK'
-  NA03697_MinION_multi-DMPK:
-    source: 'NA03697_MinION_multi'
-    target: 'DMPK'
-  NA03697_MinION_multi-CNBP:
-    source: 'NA03697_MinION_multi'
-    target: 'CNBP'
-  NA03697_Flongle_single-DMPK:
-    source: 'NA03697_Flongle_single'
-    target: 'DMPK'
-  NA03697_Flongle_multi-DMPK:
-    source: 'NA03697_Flongle_multi'
-    target: 'DMPK'
-  NA03697_Flongle_multi-CNBP:
-    source: 'NA03697_Flongle_multi'
-    target: 'CNBP'
-  NA03991_MinION_single-DMPK:
-    source: 'NA03991_MinION_single'
-    target: 'DMPK'
-  NA03991_MinION_multi-DMPK:
-    source: 'NA03991_MinION_multi'
-    target: 'DMPK'
-  NA03991_MinION_multi-CNBP:
-    source: 'NA03991_MinION_multi'
-    target: 'CNBP'
-  # ATA24-NOP56:
-  #   source: 'ATA24'
-  #   target: 'NOP56'
-  # MR27-NOP56:
-  #   source: 'MR27'
-  #   target: 'NOP56'
-  # UDPA018-NOP56:
-  #   source: 'UDPA018'
-  #   target: 'NOP56'
-  # UDP009-NOP56:
-  #   source: 'UDP009'
-  #   target: 'NOP56'
-  # UDP009B1-NOP56:
-  #   source: 'UDP009B1'
-  #   target: 'NOP56'
-  # UDP022_RE-NOP56:
-  #   source: 'UDP022_RE'
-  #   target: 'NOP56'
+  ## 2.
+  ## WRITE DOWN YOUR SAMPLE NAME AND TARGET GENE NAME HERE ##
+  ## YOU CAN ADD MULTIPLE TARGET GENES FOR EACH SAMPLE ##
+
+  ## EXAMPLE ##
+  # Patient1-DMPK:
+  #   source: 'Patient1'
+  #   target: 'DMPK'
+  # Patient1-CNBP:
+  #   source: 'Patient1'
+  #   target: 'CNBP'
 
 options:
   first_basecalling:
-    model: ~/gh/dorado/basecalling_models/dna_r9.4.1_e8_fast@v3.4/
-    cuda_devices: cuda:7
+    model: pre-requisites/dorado_models/dna_r9.4.1_e8_fast@v3.4/
+    cuda_devices: cuda:all
   second_basecalling:
-    model: ~/gh/dorado/basecalling_models/dna_r9.4.1_e8_sup@v3.6/
-    cuda_devices: cuda:1
+    model: pre-requisites/dorado_models/dna_r9.4.1_e8_sup@v3.6/
+    cuda_devices: cuda:all
+  methylation_calling:
+    dorado_original_model: pre-requisites/dorado_models/dna_r9.4.1_e8_sup@v3.3/
+    dorado_5mCG_model: pre-requisites/dorado_models/dna_r9.4.1_e8_sup@v3.3_5mCG@v0.1/
+    cuda_devices: cuda:all
   demultiplexing:
+    # DEMULTIPLEXING IS NOT SUPPORTED YET.
+    # 3. WRITE DOWN YOUR BARCODE KIT NAME AND BARCODE NUMBER HERE
     barcode_kit : EXP-NBD104
     barcode_num :
-      DM105: barcode01
-      DM112: barcode02
+      ## EXAMPLE ##
+      # Patient2: barcode01
+      # Patient3: barcode02
   on-target_extraction:
     DMPK:
       region: 'chr19:45765000-45773000'
+      chromosome: 'chr19'
     CNBP:
       region: 'chr3:129168000-129178000'
+      chromosome: 'chr3'
     NOP56:
       region: 'chr20:2648000-2658000'
-  methylation_calling:
-    dorado_original_model: ~/gh/dorado/basecalling_models/dna_r9.4.1_e8_sup@v3.3/
-    dorado_5mCG_model: ~/gh/dorado/basecalling_models/dna_r9.4.1_e8_sup@v3.3_5mCG@v0/
-  reference: 'reference/GRCh38.v44'
-  repeat_presets: '/qbio/yoojung/gh/RepeatHMM/bin/reference_sts/hg38/hg38.predefined.pa'
+      chromosome: 'chr20'
+
+  reference: 'pre-requisites/reference/GRCh38.v44'
+  repeat_presets: 'pre-requisites/RepeatHMM/bin/reference_sts/hg38/hg38.predefined.pa'
 
 programs:
-  guppy_barcoder: /qbio/yoojung/gh/ont-guppy/bin/guppy_barcoder
-  repeathmm: /qbio/yoojung/gh/RepeatHMM/bin/repeatHMM.py
-  repeathmm_condaenv: repeathmmenv
+  repeathmm: pre-requisites/RepeatHMM/bin/repeatHMM.py
+  dorado: pre-requisites/dorado-0.6.0-linux-x64/bin/dorado
+  modkit: pre-requisites/dist/modkit
+  repeathmm_condaenv: repeathmm
   ont-fast5-api_condaenv: ont-fast5-api
   pod5_condaenv: pod5
   dorado_condaenv: dorado
