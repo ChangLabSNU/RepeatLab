@@ -1,4 +1,4 @@
-# RepeatLab v1.0
+# RepeatLab
 <p align="center"><img src="https://github.com/ChangLabSNU/RepeatLab/blob/main/RepeatLab_logo.png" height="350"/></p>
 Long-read sequencing data analysis for repeat expansion diseases diagnosis based on Google Colab.
 
@@ -9,8 +9,31 @@ Long-read sequencing data analysis for repeat expansion diseases diagnosis based
 - **Output** : (1) Sequencing QC, (2) Repeat size estimation, (3) Repeat structure, (4) Methylation profiling
 
 
-### Try RepeatLab
-[RepeatLab v1.0](https://colab.research.google.com/github/ChangLabSNU/RepeatLab/blob/main/RepeatLab.ipynb)
+### Try RepeatLab on Google Colab
+[RepeatLab v1.1](https://colab.research.google.com/github/ChangLabSNU/RepeatLab/blob/main/RepeatLab.ipynb)
+
+### Try RepeatLab by Linux CLI
+#### 1. Installation
+```
+$ git clone https://github.com/ChangLabSNU/RepeatLab.git
+$ cd RepeatLab
+$ conda env create -f environment.yml
+$ conda activate repeatlab
+```
+#### 2. Pre-requisites preparation
+```
+$ cd RepeatLab/pre-requisites
+$ snakemake --cores all
+```
+#### 3. Input
+Write down belows in `config.yml`.
+- Raw data directory path
+- Sample name and target gene
+#### 4. Run RepeatLab
+```
+$ cd ../RepeatLab
+$ snakemake --cores all
+```
 
 ### Troubleshooting
 If you encounter any errors using RepeatLab, please report the trouble issues at [Issues](https://github.com/ChangLabSNU/RepeatLab/issues).
