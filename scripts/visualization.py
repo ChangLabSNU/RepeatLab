@@ -82,7 +82,7 @@ region_bed, target_names = process_form_bed(f'{OUTPUT_DIR_T}/others/target_regio
 
 seq_summary['passes_filtering'] = np.where(seq_summary['mean_qscore_template'] >= 6, True, False)
 seq_summary.passes_filtering = seq_summary.passes_filtering.astype('category')
-pass_fail = seq_summary.groupby('passes_filtering').size()
+pass_fail = seq_summary.groupby('passes_filtering', observed=False).size()
 
 pass_percentage = 100 * pass_fail[True] / len(seq_summary)
 fail_percentage = 100 - pass_percentage
@@ -494,28 +494,28 @@ ALLELE1_COLOR = '#444444'
 ALLELE2_COLOR = '#e64980'
 
 def plot_methylation_with_trend(ax, meth_prof, color, marker, allele, repeat_region):
-    ax.scatter(meth_prof['start_pos'], meth_prof['fraction_modified'], zorder=6,
-                edgecolor='none', facecolor=color,
-                s={'s': 15, 'o': 20}[marker], alpha=.8,
-                marker=marker, label=allele)
+  ax.scatter(meth_prof['start_pos'], meth_prof['fraction_modified'], zorder=6,
+              edgecolor='none', facecolor=color,
+              s={'s': 15, 'o': 20}[marker], alpha=.8,
+              marker=marker, label=allele)
 
-    trend = sm.nonparametric.lowess(exog=meth_prof['start_pos'], endog=meth_prof['fraction_modified'], frac=0.4)
-    ax.plot(trend[:,0], trend[:,1], c=color, linewidth=1.5, linestyle='-', zorder=4)
-    ax.set_xticks(ax.get_xticks())
-    ax.set_yticks(np.arange(0,120,20))
-    ax.set_xticklabels((ax.get_xticks()/1000).astype(int), size=12)
-    ax.set_yticklabels(np.arange(0,120,20), size=12)
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.spines['left'].set_position(('outward', LOGPLOT_DROP_SPINES))
-    ax.spines['bottom'].set_position(('outward', LOGPLOT_DROP_SPINES))
-    ax.legend()
-    target_chr = repeat_region.split(':')[0]
-    repeat_window = repeat_region.split(':')[1].split('-')
-    repeat_start, repeat_end = int(repeat_window[0]), int(repeat_window[1])
-    repeat_length = repeat_end - repeat_start
-    ax.set_xlabel(f'Genomic coordinate in {target_chr} (x1000)', size=12)
-    ax.set_ylabel('Methylation rate (%)', size=12)
+  trend = sm.nonparametric.lowess(exog=meth_prof['start_pos'], endog=meth_prof['fraction_modified'], frac=0.4)
+  ax.plot(trend[:,0], trend[:,1], c=color, linewidth=1.5, linestyle='-', zorder=4)
+  ax.set_xticks(ax.get_xticks())
+  ax.set_yticks(np.arange(0,120,20))
+  ax.set_xticklabels((ax.get_xticks()/1000).astype(int), size=12)
+  ax.set_yticklabels(np.arange(0,120,20), size=12)
+  ax.spines['right'].set_visible(False)
+  ax.spines['top'].set_visible(False)
+  ax.spines['left'].set_position(('outward', LOGPLOT_DROP_SPINES))
+  ax.spines['bottom'].set_position(('outward', LOGPLOT_DROP_SPINES))
+  ax.legend()
+  target_chr = repeat_region.split(':')[0]
+  repeat_window = repeat_region.split(':')[1].split('-')
+  repeat_start, repeat_end = int(repeat_window[0]), int(repeat_window[1])
+  repeat_length = repeat_end - repeat_start
+  ax.set_xlabel(f'Genomic coordinate in {target_chr} (x1000)', size=12)
+  ax.set_ylabel('Methylation rate (%)', size=12)
 
 meth_fig, ax = plt.subplots(1,1, figsize=(18,3))
 
@@ -524,6 +524,140 @@ plot_methylation_with_trend(ax, allele1_meth_prof, ALLELE1_COLOR, 's', 'allele 1
 plot_methylation_with_trend(ax, allele2_meth_prof, ALLELE2_COLOR, 'o', 'allele 2', target_region)
 
 methylation_plot = mpld3.fig_to_html(meth_fig)
+
+a1_keys_meth_mean, a2_keys_meth_mean = None, None
+meth_key_df = None
+
+def plot_methylation_key_region(ax, allele1_meth_prof, allele2_meth_prof, target_gene):
+
+  if target_gene == 'DMPK':
+
+      methylation_key_positions = "45768652,45768667,45768673,45768678,45768682,45768687 45770725,45770739,45770744,45770750,45770784,45770788 45769906,45769912,45769924,45769933,45769951,45769953"
+      CTCF1_positions = "45770307,45770328,45770332,45770342,45770348,45770371,45770381,45770385,45770390,45770408,45770415,45770417,45770429,45770436,45770455,45770463,45770469,45770495,45770497,45770501,45770512,45770515,45770525,45770537,45770540"
+      CTCF2_positions = "45769994,45770013,45770015,45770022,45770039,45770068,45770076,45770091,45770107,45770111,45770116"
+
+      meth_key_groups = methylation_key_positions.split(" ")
+      meth_keys = []
+      for group in meth_key_groups:
+          meth_keys.append(list(map(int, group.split(","))))
+
+      CTCF1_sites = [int(site) for site in CTCF1_positions.split(",")]
+      CTCF2_sites = [int(site) for site in CTCF2_positions.split(",")]
+
+      a1_CTCF1_meth_mean = np.mean(allele1_meth_prof.loc[allele1_meth_prof['start_pos'].isin(CTCF1_sites), 'fraction_modified'].tolist())
+      a1_CTCF2_meth_mean = np.mean(allele1_meth_prof.loc[allele1_meth_prof['start_pos'].isin(CTCF2_sites), 'fraction_modified'].tolist())
+      a1_g1_meth_mean = np.mean(allele1_meth_prof.loc[allele1_meth_prof['start_pos'].isin(meth_keys[0]), 'fraction_modified'].tolist())
+      a1_g2_meth_mean = np.mean(allele1_meth_prof.loc[allele1_meth_prof['start_pos'].isin(meth_keys[1]), 'fraction_modified'].tolist())
+      a1_g3_meth_mean = np.mean(allele1_meth_prof.loc[allele1_meth_prof['start_pos'].isin(meth_keys[2]), 'fraction_modified'].tolist())
+
+      a2_CTCF1_meth_mean = np.mean(allele2_meth_prof.loc[allele2_meth_prof['start_pos'].isin(CTCF1_sites), 'fraction_modified'].tolist())
+      a2_CTCF2_meth_mean = np.mean(allele2_meth_prof.loc[allele2_meth_prof['start_pos'].isin(CTCF2_sites), 'fraction_modified'].tolist())
+      a2_g1_meth_mean = np.mean(allele2_meth_prof.loc[allele2_meth_prof['start_pos'].isin(meth_keys[0]), 'fraction_modified'].tolist())
+      a2_g2_meth_mean = np.mean(allele2_meth_prof.loc[allele2_meth_prof['start_pos'].isin(meth_keys[1]), 'fraction_modified'].tolist())
+      a2_g3_meth_mean = np.mean(allele2_meth_prof.loc[allele2_meth_prof['start_pos'].isin(meth_keys[2]), 'fraction_modified'].tolist())
+
+      a1_keys_meth_mean = np.array([a1_CTCF1_meth_mean, a1_CTCF2_meth_mean, a1_g1_meth_mean, a1_g2_meth_mean, a1_g3_meth_mean])
+      a2_keys_meth_mean = np.array([a2_CTCF1_meth_mean, a2_CTCF2_meth_mean, a2_g1_meth_mean, a2_g2_meth_mean, a2_g3_meth_mean])
+
+  elif os.path.exists(f'key_sites.txt'):
+      with open(f'key_sites.txt', 'r') as f:
+          if len(f.read().splitlines()) > 0:
+              key_sites = f.read().splitlines()[0]
+              meth_key_groups = key_sites.split(" ")
+              if len(meth_key_groups) > 0:
+                  meth_keys = []
+                  a1_keys_meth_mean = []
+                  a2_keys_meth_mean = []
+                  for group in meth_key_groups:
+                      meth_keys.append(list(map(int, group.split(","))))
+                  for key in meth_keys:
+                      a1_keys_meth_mean.append(np.mean(allele1_meth_prof.loc[allele1_meth_prof['start_pos'].isin(key), 'fraction_modified'].tolist()))
+                      a2_keys_meth_mean.append(np.mean(allele2_meth_prof.loc[allele2_meth_prof['start_pos'].isin(key), 'fraction_modified'].tolist()))
+                  a1_keys_meth_mean = np.array(a1_keys_meth_mean)
+                  a2_keys_meth_mean = np.array(a2_keys_meth_mean)
+          else:
+              return print('No methylation key regions.')
+
+  else:
+      return print('No methylation key regions.')
+
+  if len(a1_keys_meth_mean) > 0 and len(a2_keys_meth_mean) > 0:
+    from matplotlib.patches import Polygon
+    from matplotlib.colors import Normalize
+    import matplotlib.cm as cm
+
+    DISCRETE_COLOR_LEVELS = 10
+    _cmap = plt.get_cmap('YlGnBu').copy()
+    _cmap.set_gamma(0.6)
+    _cmap = mpl.colors.LinearSegmentedColormap.from_list(
+        'mycolormap', _cmap(np.linspace(0, 1, DISCRETE_COLOR_LEVELS)),
+        DISCRETE_COLOR_LEVELS)
+    cmap_top = _cmap
+    cmap_bottom = _cmap
+
+    norm_top = Normalize(vmin=0, vmax=100)
+    norm_bottom = Normalize(vmin=0, vmax=100)
+
+    gap = 0.05
+
+    for i in range(len(a1_keys_meth_mean)):
+        x_left, x_right = i+gap, i+1-gap
+        y_bottom, y_top = 0, 1
+
+        coords_top_left = [(x_left, y_top), (x_left, y_bottom), (x_right, y_bottom)]
+        coords_bottom_right = [(x_right, y_top), (x_left, y_top), (x_right, y_bottom)]
+
+        poly_top = Polygon(coords_top_left, closed=True)
+        poly_bottom = Polygon(coords_bottom_right, closed=True)
+
+        val_top = a1_keys_meth_mean[i]
+        val_bottom = a2_keys_meth_mean[i]
+
+        poly_top.set_facecolor(cmap_top(norm_top(val_top)))
+        poly_bottom.set_facecolor(cmap_bottom(norm_bottom(val_bottom)))
+
+        poly_top.set_edgecolor('none')
+        poly_bottom.set_edgecolor('none')
+
+        ax.add_patch(poly_top)
+        ax.add_patch(poly_bottom)
+
+        linewidth=1
+        ax.plot([i+gap, i+1-gap], [1, 0], color='black', linewidth=linewidth, zorder=3)
+
+        ax.plot([i+gap, i+gap], [0, 1], color='black', linewidth=linewidth, zorder=3)
+        ax.plot([i+1-gap, i+1-gap], [0, 1], color='black', linewidth=linewidth, zorder=3)
+        ax.plot([i+gap, i+1-gap], [0, 0], color='black', linewidth=linewidth, zorder=3)
+        ax.plot([i+gap, i+1-gap], [1, 1], color='black', linewidth=linewidth, zorder=3)
+
+    ax.set_xlim(0, len(a1_keys_meth_mean))
+    ax.invert_yaxis()
+    ax.set_yticks([])
+
+    for axis in ['top', 'bottom', 'left', 'right']:
+      ax.spines[axis].set_visible(False)
+
+    sm_top = cm.ScalarMappable(norm=norm_top, cmap=cmap_top)
+    cbar = plt.colorbar(sm_top, ax=ax, location='bottom', pad=0.3, aspect=15, shrink=0.6)
+    cbar.set_label('Methylation rate (%)', fontsize=10)
+
+    ax.set_xticks(np.arange(len(a1_keys_meth_mean)) + 0.5)
+    if target_gene == 'DMPK':
+      labels = ['CTCF1', 'CTCF2', 'Locus1', 'Locus2', 'Locus3']
+    else:
+      labels = [f'Locus{i+1}' for i in range(len(a1_keys_meth_mean))]
+    ax.set_xticklabels(labels, fontsize=15)
+    meth_key_df = pd.DataFrame([a1_keys_meth_mean, a2_keys_meth_mean], columns=labels, index=['Allele1', 'Allele2'])
+    return meth_key_df
+
+meth_keys_fig, ax = plt.subplots(1, 1, figsize=(6, 2))
+
+meth_key_df = plot_methylation_key_region(ax, allele1_meth_prof, allele2_meth_prof, TARGET_GENE)
+if TARGET_GENE == 'DMPK':
+  labels = ['CTCF1', 'CTCF2', 'Locus1', 'Locus2', 'Locus3']
+else:
+  labels = [f'Locus{i+1}' for i in range(len(a1_keys_meth_mean))]
+methylation_key_plot = mpld3.fig_to_html(meth_keys_fig)
 
 with open(f'{OUTPUT_DIR_T}/result.html', 'w') as f:
     f.write('<!DOCTYPE html>')
@@ -567,6 +701,14 @@ with open(f'{OUTPUT_DIR_T}/result.html', 'w') as f:
     f.write('<h1>4. Methylation profile</h1>')
     f.write('<h6>Repeat region = {}</h6>'.format(target_region))
     f.write(methylation_plot)
+    f.write('<h4>Methylation key regions profile</h4>')
+    f.write('<h6>{} in order.</h6>'.format(labels))
+    f.write(methylation_key_plot)
+    if meth_key_df is not None:
+        f.write('<h5>Methylation key regions profile table</h5>')
+        f.write(meth_key_df.to_html())
     f.write('</div>')
     f.write('</body>')
     f.write('</html>')
+
+print(f'Data report is generated successfully. Please check the result.html file in {OUTPUT_DIR_T} directory.')
