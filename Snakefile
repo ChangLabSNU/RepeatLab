@@ -29,12 +29,22 @@ rule all:
         expand('analyses/{analysis}/result.html', analysis=config['analysis'])
 
 rule convert_fast5_to_pod5:
+    input: fast5_files = lambda wildcards: glob_wildcards(f"{config['data']['sources'][wildcards.sample]}/*.fast5").filelist
     output: directory('raw_pod5/{sample}/')
     priority: 100
     run:
         srcdir = config['data']['sources'][wildcards.sample]
-        shell(f'conda run --no-capture-output -n {config["programs"]["pod5_condaenv"]} \
-                pod5 convert fast5 -o {output} -r {srcdir} --one-to-one {srcdir}')
+        if not input.fast5_files:
+            # Skip conversion if no .fast5 files are found
+            shell(f'mkdir -p {output}')
+            pod5_files = glob.glob(f'{srcdir}/*.pod5')
+            if pod5_files:
+                shell(f'cp -r {srcdir}/*.pod5 {output}')
+            else:
+                raise FileNotFoundError(f'No .fast5 or .pod5 files found in {srcdir}')
+        else:
+            shell(f'conda run --no-capture-output -n {config["programs"]["pod5_condaenv"]} \
+                    pod5 convert fast5 -o {output} -r {srcdir} --one-to-one {srcdir}')
 
 # ruleorder: dorado_basecall_first > demultiplex
 
