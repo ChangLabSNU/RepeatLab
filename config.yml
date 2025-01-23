@@ -70,7 +70,7 @@ options:
 
 programs:
   repeathmm: pre-requisites/RepeatHMM/bin/repeatHMM.py
-  dorado: pre-requisites/dorado-0.6.0-linux-x64/bin/dorado
+  dorado: pre-requisites/dorado-0.9.1-linux-x64/bin/dorado
   modkit: pre-requisites/dist/modkit
   repeathmm_condaenv: repeathmm
   ont-fast5-api_condaenv: ont-fast5-api
