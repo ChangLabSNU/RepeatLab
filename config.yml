@@ -9,12 +9,12 @@ data:
 
   sources_multiplex:
     ## 1-1.
-    ## DEMULTIPLEXING IS NOT SUPPORTED YET.
     ## IF YOU WANT TO DO BARCODE DEMULTIPLEXING, WRITE DOWN YOUR SAMPLE NAME AND PATH HERE ##
     ## YOU CAN ADD MULTIPLE SAMPLES ##
 
     ## EXAMPLE ##
-    # Patient2_3: /raw_data/Nanopore_data/Patient2_3/
+    # Patient2: /raw_data/Nanopore_data/Patient2_3/
+    # Patient3: /raw_data/Nanopore_data/Patient2_3/
 
     
 analysis:
@@ -29,6 +29,12 @@ analysis:
   # Patient1-CNBP:
   #   source: 'Patient1'
   #   target: 'CNBP'
+  # Patient2-DMPK:
+  #   source: 'Patient2'
+  #   target: 'DMPK'
+  # Patient3-DMPK:
+  #   source: 'Patient3'
+  #   target: 'DMPK'
 
 options:
   first_basecalling:
@@ -42,7 +48,6 @@ options:
     dorado_5mCG_model: pre-requisites/dorado_models/dna_r9.4.1_e8_sup@v3.3_5mCG@v0.1/
     cuda_devices: cuda:all
   demultiplexing:
-    # DEMULTIPLEXING IS NOT SUPPORTED YET.
     # 3. WRITE DOWN YOUR BARCODE KIT NAME AND BARCODE NUMBER HERE
     barcode_kit : EXP-NBD104
     barcode_num :

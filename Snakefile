@@ -1,17 +1,21 @@
+import os
+
 configfile: 'config.yml'
 
 SAMPLES = list(config['data']['sources'])
+SAMPLES_MTPLX = list(config['data']['sources_multiplex'])
+ALL_SAMPLES = SAMPLES + SAMPLES_MTPLX
 REFERENCE = config['options']['reference']
 
 rule all:
     input:
-        expand('raw_pod5/{sample}/', sample=SAMPLES),
-        expand('basecalls/dorado/fast/{sample}/{sample}.fast-called.bam', sample=SAMPLES),
-        # expand('basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.demultiplexed.fast-called.bam', sample_mtplx=SAMPLES_MTPLX),
-        expand('basecalls/dorado/fast/{sample}/{sample}.fast-called.summary.txt', sample=SAMPLES),
-        expand('alignments/{sample}.fast-aligned.sorted.bam', sample=SAMPLES),
-        expand('alignments/{sample}.fast-aligned.sorted.bam.bai', sample=SAMPLES),
-        expand('alignments/{sample}.fast-aligned.sorted.bam.stats', sample=SAMPLES),
+        expand('raw_pod5/{sample}/', sample=ALL_SAMPLES),
+        expand('basecalls/dorado/fast/{sample}/{sample}.fast-called.bam', sample=ALL_SAMPLES),
+        expand('basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.fast-called.bam', sample_mtplx=SAMPLES_MTPLX),
+        expand('basecalls/dorado/fast/{sample}/{sample}.fast-called.summary.txt', sample=ALL_SAMPLES),
+        expand('alignments/{sample}.fast-aligned.sorted.bam', sample=ALL_SAMPLES),
+        expand('alignments/{sample}.fast-aligned.sorted.bam.bai', sample=ALL_SAMPLES),
+        expand('alignments/{sample}.fast-aligned.sorted.bam.stats', sample=ALL_SAMPLES),
         expand('on-target/readID_list/{analysis}.ontarget.readID.txt', analysis=config['analysis']),
         expand('basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam', analysis=config['analysis']),
         expand('basecalls/dorado/sup_v3.6/{analysis}.sup-called.summary.txt', analysis=config['analysis']),
@@ -29,12 +33,14 @@ rule all:
         expand('analyses/{analysis}/result.html', analysis=config['analysis'])
 
 rule convert_fast5_to_pod5:
-    input: fast5_files = lambda wildcards: glob_wildcards(f"{config['data']['sources'][wildcards.sample]}/*.fast5").filelist
+    input: 
+        lambda wildcards: glob.glob(f"{config['data']['sources'][wildcards.sample]}/*.fast5")
     output: directory('raw_pod5/{sample}/')
     priority: 100
     run:
         srcdir = config['data']['sources'][wildcards.sample]
-        if not input.fast5_files:
+        fast5_files = glob.glob(f'{srcdir}/*.fast5')
+        if not fast5_files:
             # Skip conversion if no .fast5 files are found
             shell(f'mkdir -p {output}')
             pod5_files = glob.glob(f'{srcdir}/*.pod5')
@@ -46,7 +52,7 @@ rule convert_fast5_to_pod5:
             shell(f'conda run --no-capture-output -n {config["programs"]["pod5_condaenv"]} \
                     pod5 convert fast5 -o {output} -r {srcdir} --one-to-one {srcdir}')
 
-# ruleorder: dorado_basecall_first > demultiplex
+ruleorder: dorado_basecall_first > demultiplex
 
 rule dorado_basecall_first:
     input: 'raw_pod5/{sample}/'
@@ -58,22 +64,21 @@ rule dorado_basecall_first:
         shell(f'{config["programs"]["dorado"]} basecaller -x {bcopts["cuda_devices"]} -r --emit-sam {bcopts["model"]} {input} \
                 | samtools view -b -o {output}')
 
-# rule demultiplex:
-#     output: 'basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.demultiplexed.fast-called.bam'
-#     threads: 10
-#     priority: 98
-#     run:
-#         inputdir='basecalls/dorado/fast/{wildcards.sample_mtplx}/'
-#         outputdir='basecalls/dorado/fast/{wildcards.sample_mtplx}_multiplexing/'
-#         bcopts = config['options']['demultiplexing']
-#         barcode_kit = bcopts['barcode_kit']
-#         barcode_num = bcopts['barcode_num'][wildcards.sample_mtplx]
-#         shell(f'{config["programs"]["guppy_barcoder"]} -i {inputdir} --disable_pings -t {threads} -x cuda:6,7 \
-#                 --barcode_kits {barcode_kit} --compress_fastq -s {outputdir}')
-#         shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
-#                 dorado demux --kit-name {barcode_kit} --output-dir {outputdir} {output}')
-#         shell(f'zcat {outputdir}/{barcode_num}/fastq_*.fastq.gz | \
-#                 bgzip -@ {threads} -c > {output}')     
+rule demultiplex:
+    input: 'basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.fast-called.bam'
+    output: 'basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.fast-called.bam'
+    threads: 10
+    priority: 98
+    run:
+        demuxdir='basecalls/dorado/fast/demux/'
+        bcopts = config['options']['demultiplexing']
+        barcode_kit = bcopts['barcode_kit']
+        barcode_num = bcopts['barcode_num'][wildcards.sample_mtplx]
+
+        if not os.path.exists(demuxdir):
+            shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
+                    dorado demux --recursive --kit-name {barcode_kit} --output-dir {demuxdir} {input}')
+        shell(f'cp {demuxdir}/{barcode_kit}_{barcode_num}.bam {output}') 
 
 rule dorado_summary_first:
     input: 'basecalls/dorado/fast/{sample}/{sample}.fast-called.bam'
