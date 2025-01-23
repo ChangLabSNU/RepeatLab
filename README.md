@@ -4,13 +4,13 @@ Long-read sequencing data analysis for repeat expansion diseases diagnosis based
 
 ### Features
 - Optimized especially for targeted nanopore sequencing data. (Repeat size estimation is available for all long-read sequencing data.)
-- User's own Google account is needed.
+- Using the Google Colab platform requires a personal Google account.
 - **Input** : `POD5`, `FAST5`, or `FASTQ` files
 - **Output** : (1) Sequencing QC, (2) Repeat size estimation, (3) Repeat structure, (4) Methylation profiling
 
 
 ### Try RepeatLab on Google Colab
-[RepeatLab v1.1](https://colab.research.google.com/github/ChangLabSNU/RepeatLab/blob/main/RepeatLab.ipynb)
+[RepeatLab](https://colab.research.google.com/github/ChangLabSNU/RepeatLab/blob/main/RepeatLab.ipynb)
 
 ### Try RepeatLab by Linux CLI
 #### 1. Installation
@@ -34,6 +34,9 @@ Write down belows in `config.yml`.
 $ cd ../RepeatLab
 $ snakemake --cores all
 ```
+
+### Test run
+Test run is available with NA03697 DNA nanopore sequencing data in `test-data/`.
 
 ### Troubleshooting
 If you encounter any errors using RepeatLab, please report the trouble issues at [Issues](https://github.com/ChangLabSNU/RepeatLab/issues).
