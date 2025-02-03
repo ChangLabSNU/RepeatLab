@@ -2,16 +2,19 @@ import os
 
 configfile: 'config.yml'
 
-SAMPLES = list(config['data']['sources'])
-SAMPLES_MTPLX = list(config['data']['sources_multiplex'])
+SAMPLES = list(config['data'].get('sources', {}) or {})
+SAMPLES_MTPLX = list(config['data'].get('sources_multiplex', {}) or {})
 ALL_SAMPLES = SAMPLES + SAMPLES_MTPLX
 REFERENCE = config['options']['reference']
+
+if len(ALL_SAMPLES) == 0:
+    raise ValueError("ERROR: No valid samples found in 'sources' or 'sources_multiplex' in config.yml.")
 
 rule all:
     input:
         expand('raw_pod5/{sample}/', sample=ALL_SAMPLES),
         expand('basecalls/dorado/fast/{sample}/{sample}.fast-called.bam', sample=ALL_SAMPLES),
-        expand('basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.fast-called.bam', sample_mtplx=SAMPLES_MTPLX),
+        (expand('basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.fast-called.bam', sample_mtplx=SAMPLES_MTPLX) if SAMPLES_MTPLX else []),
         expand('basecalls/dorado/fast/{sample}/{sample}.fast-called.summary.txt', sample=ALL_SAMPLES),
         expand('alignments/{sample}.fast-aligned.sorted.bam', sample=ALL_SAMPLES),
         expand('alignments/{sample}.fast-aligned.sorted.bam.bai', sample=ALL_SAMPLES),
@@ -52,7 +55,8 @@ rule convert_fast5_to_pod5:
             shell(f'conda run --no-capture-output -n {config["programs"]["pod5_condaenv"]} \
                     pod5 convert fast5 -o {output} -r {srcdir} --one-to-one {srcdir}')
 
-ruleorder: dorado_basecall_first > demultiplex
+if SAMPLES_MTPLX:
+    ruleorder: dorado_basecall_first > demultiplex
 
 rule dorado_basecall_first:
     input: 'raw_pod5/{sample}/'
@@ -64,21 +68,22 @@ rule dorado_basecall_first:
         shell(f'{config["programs"]["dorado"]} basecaller -x {bcopts["cuda_devices"]} -r --emit-sam {bcopts["model"]} {input} \
                 | samtools view -b -o {output}')
 
-rule demultiplex:
-    input: 'basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.fast-called.bam'
-    output: 'basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.fast-called.bam'
-    threads: 10
-    priority: 98
-    run:
-        demuxdir='basecalls/dorado/fast/demux/'
-        bcopts = config['options']['demultiplexing']
-        barcode_kit = bcopts['barcode_kit']
-        barcode_num = bcopts['barcode_num'][wildcards.sample_mtplx]
+if SAMPLES_MTPLX:
+    rule demultiplex:
+        input: 'basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.fast-called.bam'
+        output: 'basecalls/dorado/fast/{sample_mtplx}/{sample_mtplx}.fast-called.bam'
+        threads: 10
+        priority: 98
+        run:
+            demuxdir='basecalls/dorado/fast/demux/'
+            bcopts = config['options']['demultiplexing']
+            barcode_kit = bcopts['barcode_kit']
+            barcode_num = bcopts['barcode_num'][wildcards.sample_mtplx]
 
-        if not os.path.exists(demuxdir):
-            shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
-                    dorado demux --recursive --kit-name {barcode_kit} --output-dir {demuxdir} {input}')
-        shell(f'cp {demuxdir}/{barcode_kit}_{barcode_num}.bam {output}') 
+            if not os.path.exists(demuxdir):
+                shell(f'conda run --no-capture-output -n {config["programs"]["dorado_condaenv"]} \
+                        dorado demux --recursive --kit-name {barcode_kit} --output-dir {demuxdir} {input}')
+            shell(f'cp {demuxdir}/{barcode_kit}_{barcode_num}.bam {output}') 
 
 rule dorado_summary_first:
     input: 'basecalls/dorado/fast/{sample}/{sample}.fast-called.bam'
