@@ -38,7 +38,7 @@ $ snakemake --cores 1
 ```
 
 ### Test run
-Test run is available with [NA03697 DNA nanopore sequencing data](https://colab.research.google.com/github/ChangLabSNU/RepeatLab/blob/main/test-data/NA03697-test.pod5) in `test-data/`.  
+Test run is available with [NA03697 DNA nanopore sequencing data](https://colab.research.google.com/github/ChangLabSNU/RepeatLab/test-data/NA03697-test.pod5) in `test-data/`.  
 It takes about 5–10 minutes for test run.
 #### 1. Test run on **Google Colab**  
 Download the test data to your own Google Drive and follow the instructions for Google Colab-based RepeatLab.
