@@ -1,4 +1,5 @@
 import os
+import glob
 
 configfile: 'config.yml'
 
@@ -88,7 +89,7 @@ if SAMPLES_MTPLX:
 rule dorado_summary_first:
     input: 'basecalls/dorado/fast/{sample}/{sample}.fast-called.bam'
     output: 'basecalls/dorado/fast/{sample}/{sample}.fast-called.summary.txt'
-    priority: 91
+    priority: 97
     run:
         shell(f'{config["programs"]["dorado"]} summary {input} > {output}')
 
@@ -97,7 +98,7 @@ rule align_first:
         index=f'{REFERENCE}.genome.mm2.idx'
     output: temp('alignments/{sample}.fast-aligned.unsorted.bam')
     threads: 32
-    priority: 97
+    priority: 96
     run:
         fast_basecalled = 'basecalls/dorado/fast/{wildcards.sample}/{wildcards.sample}.fast-called.bam'
         shell(f'{config["programs"]["dorado"]} aligner -t {threads} {input.index} {fast_basecalled} > {output}')
@@ -106,19 +107,19 @@ rule sort_alignment_first:
     input: 'alignments/{sample}.fast-aligned.unsorted.bam'
     output: 'alignments/{sample}.fast-aligned.sorted.bam'
     threads: 10
-    priority: 96
+    priority: 95
     shell: 'samtools sort -@ {threads} -o {output} {input}'
 
 rule index_alignment_first:
     input: 'alignments/{sample}.fast-aligned.sorted.bam'
     output: 'alignments/{sample}.fast-aligned.sorted.bam.bai'
-    priority: 95
+    priority: 94
     shell: 'samtools index {input}'
 
 rule stats_alignment_first:
     input: 'alignments/{sample}.fast-aligned.sorted.bam'
     output: 'alignments/{sample}.fast-aligned.sorted.bam.stats'
-    priority: 94
+    priority: 93
     shell: 'samtools stats {input} > {output}'
 
 def prepare_inputbam_ontarget(wildcards):
@@ -132,7 +133,7 @@ def prepare_inputbam_ontarget(wildcards):
 rule extract_ontarget_reads:
     input: unpack(prepare_inputbam_ontarget)
     output: 'on-target/readID_list/{analysis}.ontarget.readID.txt'
-    priority: 93
+    priority: 92
     run:
         target_gene = str(wildcards.analysis).split('-')[1]
         target_region = config['options']['on-target_extraction'][target_gene]['region']
@@ -142,7 +143,7 @@ rule dorado_basecall_second:
     input: unpack(prepare_inputbam_ontarget)
     output: 'basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam'
     threads: 10
-    priority: 92
+    priority: 91
     run:
         readID = 'on-target/readID_list/{wildcards.analysis}.ontarget.readID.txt'
         bcopts = config['options']['second_basecalling']
@@ -153,7 +154,7 @@ rule dorado_basecall_second:
 rule dorado_summary_second:
     input: 'basecalls/dorado/sup_v3.6/{analysis}.sup-called.bam'
     output: 'basecalls/dorado/sup_v3.6/{analysis}.sup-called.summary.txt'
-    priority: 91
+    priority: 90
     run:
         shell(f'{config["programs"]["dorado"]} summary {input} > {output}')
 
@@ -163,7 +164,7 @@ rule align_second:
         index=f'{REFERENCE}.genome.mm2.idx'
     output: temp('alignments/{analysis}.sup-aligned.unsorted.bam')
     threads: 32
-    priority: 90
+    priority: 89
     run:
         shell(f'{config["programs"]["dorado"]} aligner -t {threads} {input.index} {input.bam} > {output}')
 
@@ -171,13 +172,13 @@ rule sort_alignment_second:
     input: 'alignments/{analysis}.sup-aligned.unsorted.bam'
     output: 'alignments/{analysis}.sup-aligned.sorted.bam'
     threads: 10
-    priority: 89
+    priority: 88
     shell: 'samtools sort -@ {threads} -o {output} {input}'
 
 rule index_alignment_second:
     input: 'alignments/{analysis}.sup-aligned.sorted.bam'
     output: 'alignments/{analysis}.sup-aligned.sorted.bam.bai'
-    priority: 88
+    priority: 87
     shell: 'samtools index {input}'
 
 def prepare_inputs_repeathmm(wildcards):
@@ -200,7 +201,7 @@ rule run_repeathmm:
     params:
         tmpdir='analyses/{analysis}/tmp',
         logbam='logbam'
-    priority: 87
+    priority: 86
     run:
         analysis_setting = config['analysis'][wildcards.analysis]
         sample = analysis_setting['source']
@@ -222,20 +223,20 @@ rule run_repeathmm:
 
 rule phasing:
     output: 'on-target/phased_readID_list/{analysis}.allele{num}.readID.txt'
-    priority: 86
+    priority: 85
     run: 
         shell(f'python scripts/phasing.py {wildcards.analysis}')
 
 rule uncompress_genome:
     input: f'{REFERENCE}.genome.fa.gz'
     output: temp('reference/full_ref_genome.fa.gz')
-    priority: 85
+    priority: 84
     shell: 'gunzip -c {input} > {output}'
 
 rule extract_genome_chromosomes:
     input: 'reference/full_ref_genome.fa.gz',
     output: 'reference/{analysis}_target_ref_genome.fa'
-    priority: 84
+    priority: 83
     run:
         analysis_setting = config['analysis'][wildcards.analysis]
         gene = analysis_setting['target']
@@ -246,14 +247,14 @@ rule extract_genome_chromosomes:
 rule build_minimap_index:
     input: 'reference/{analysis}_target_ref_genome.fa'
     output: 'reference/{analysis}_target_ref_genome.mmi'
-    priority: 83
+    priority: 82
     shell: 'minimap2 -x map-ont -k 13 -w 20 -d {output} {input}'
 
 rule basecall_dorado_5mC:
     input:
         read_ids='on-target/phased_readID_list/{analysis}.allele{num}.readID.txt'
     output: 'basecalls/mod/{analysis}.allele{num}.meth-called.bam'
-    priority: 82
+    priority: 81
     run:
         sample = str(wildcards.analysis).split('-')[0]
         datadir=f'raw_pod5/{sample}/'
@@ -269,7 +270,7 @@ rule align_sequences:
         basecalls='basecalls/mod/{analysis}.allele{num}.meth-called.bam',
         index='reference/{analysis}_target_ref_genome.mmi'
     output: 'alignments/{analysis}.allele{num}.meth-aligned.bam'
-    priority: 81
+    priority: 80
     run: 
         threads=32
         shell(f'{config["programs"]["dorado"]} aligner -t {threads} {input.index} {input.basecalls} > {output}')
@@ -277,7 +278,7 @@ rule align_sequences:
 rule sort_alignments:
     input: 'alignments/{analysis}.allele{num}.meth-aligned.bam'
     output: 'alignments/{analysis}.allele{num}.meth-aligned.sorted.bam'
-    priority: 80
+    priority: 79
     shell: 'samtools sort --write-index -o {output} {input}'
 
 rule pileup_methylated_sites:
@@ -285,7 +286,7 @@ rule pileup_methylated_sites:
         alignments='alignments/{analysis}.allele{num}.meth-aligned.sorted.bam',
         reference='reference/{analysis}_target_ref_genome.fa'
     output: 'meth-profiles/{analysis}.allele{num}.meth-called.bedMethyl'
-    priority: 79
+    priority: 78
     run: 
         shell(f'{config["programs"]["modkit"]} pileup --no-filtering --combine-strands --cpg \
                 --ref {input.reference} {input.alignments} {output}')
@@ -293,7 +294,7 @@ rule pileup_methylated_sites:
 rule tabularize_bedmethyl:
     input: 'meth-profiles/{analysis}.allele{num}.meth-called.bedMethyl'
     output: 'meth-profiles/{analysis}.allele{num}.meth-called.tsv'
-    priority: 78
+    priority: 77
     shell: '(echo "chrom\tposition\tcoverage\tmethylation_pct"; \
              awk -vOFS=\'\\t\' \'{{print $1, $2, $10, $11}}\' \
              {input}) > {output}'
@@ -301,5 +302,6 @@ rule tabularize_bedmethyl:
 rule result_visualize:
     input: 'analyses/{analysis}/result.log'
     output: 'analyses/{analysis}/result.html'
+    priority: 76
     run:
         shell('python scripts/visualization.py {wildcards.analysis}')
