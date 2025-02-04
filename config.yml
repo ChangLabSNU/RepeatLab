@@ -7,6 +7,9 @@ data:
     ## EXAMPLE ##
     # Patient1: /raw_data/Nanopore_data/Patient1/
 
+    ## IF YOU WANT TO USE TEST DATA, USE THIS LINE ##
+    NA03697_test: test-data/
+
   sources_multiplex:
     ## 1-1.
     ## IF YOU WANT TO DO BARCODE DEMULTIPLEXING, WRITE DOWN YOUR SAMPLE NAME AND PATH HERE ##
@@ -15,7 +18,6 @@ data:
     ## EXAMPLE ##
     # Patient2: /raw_data/Nanopore_data/Patient2_3/
     # Patient3: /raw_data/Nanopore_data/Patient2_3/
-
     
 analysis:
   ## 2.
@@ -35,6 +37,11 @@ analysis:
   # Patient3-DMPK:
   #   source: 'Patient3'
   #   target: 'DMPK'
+
+  ## IF YOU WANT TO USE TEST DATA, USE THIS LINE ##
+  NA03697_test-DMPK:
+    source: 'NA03697_test'
+    target: 'DMPK'
 
 options:
   first_basecalling:
