@@ -130,27 +130,3 @@ dmypy.json
 
 # Snakemake
 .snakemake/
-
-# Private directories
-alignments/
-analyses/
-basecalls/
-before2023/
-benchmark/
-figures/
-genomecov/
-logbam/
-notebooks/
-on-target/
-raw_pod5/
-RepeatHMM_depth_benchmark/
-tools_comparison/
-methylation-2/
-
-# Private files
-all_sample.result.tsv
-
-# Ignore all files in the directory except Snakefile
-methylation/
-reference/
-archive/
