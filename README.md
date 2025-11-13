@@ -1,4 +1,5 @@
 # RepeatLab
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChangLabSNU/RepeatLab/blob/main/RepeatLab.ipynb)
 <p align="center"><img src="https://github.com/ChangLabSNU/RepeatLab/blob/main/RepeatLab_logo.png" height="350"/></p>
 Long-read sequencing data analysis for repeat expansion diseases diagnosis based on Google Colab.
 
