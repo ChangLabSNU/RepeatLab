@@ -1,0 +1,56 @@
+diff --git a/bin/RepeatHMM_scripts/myBAMhandler.py b/bin/RepeatHMM_scripts/myBAMhandler.py
+index c7a5473..8d3c7bc 100755
+--- a/bin/RepeatHMM_scripts/myBAMhandler.py
++++ b/bin/RepeatHMM_scripts/myBAMhandler.py
+@@ -540,6 +540,9 @@ def getRepeatForGivenGene(commonOptions, specifiedOptions, moreOptions):
+                 currep[0]) + ' reads name:' + currep[2] + " " + str(commonOptions['MaxRep']) + " " + str(commonOptions['MaxRep'] * len_repPat))
+             if handleint:
+                 logging.warning(str(repeats_dict[currep[2]][:2]))
++        #---
++        logging.info('READ:' + currep[2] + ' Status:' + str(currep[0]) + ' LengthCall:' + str(int(len(newstr) / float(len_repPat))) + ' Name:' + repeatName + ' Pattern:' + repPat + ' newstr:' + newstr + ' pre0:' + str(pre0) + ' predStats:' + str(predstats))
++        #---
+         orignial.append([currep[1], pre0, predstats])
+         currep[1] = newstr
+         if currep[0]:
+diff --git a/bin/RepeatHMM_scripts/myRepeatReAlignment.py b/bin/RepeatHMM_scripts/myRepeatReAlignment.py
+index 1746c86..b573a6d 100644
+--- a/bin/RepeatHMM_scripts/myRepeatReAlignment.py
++++ b/bin/RepeatHMM_scripts/myRepeatReAlignment.py
+@@ -1329,7 +1329,7 @@ def getRepeatCounts(commonOptions, specifiedOptions, moreOptions):
+ 	
+ 	expRegionInLongRead = detectRepRegion(commonOptions, specifiedOptions, moreOptions)
+ 	if moreOptions.has_key(myheader.FATAL_key) and moreOptions[myheader.FATAL_key]==True:
+-		myrm(moreOptions, specifiedOptions, commonOptions);
++# 		myrm(moreOptions, specifiedOptions, commonOptions);
+ 		return None
+ 	nonRepeatinLongRead = getNonRepeatAlignment(commonOptions, specifiedOptions, moreOptions)
+ 
+@@ -1353,7 +1353,7 @@ def getRepeatCounts(commonOptions, specifiedOptions, moreOptions):
+ 	repcount = findRepeatCountALongRead(commonOptions, specifiedOptions, moreOptions)
+ 	del moreOptions['expRegionInLongRead']
+ 	
+-	myrm(moreOptions, specifiedOptions, commonOptions);
++# 	myrm(moreOptions, specifiedOptions, commonOptions);
+ 
+ 	return repcount
+ 
+diff --git a/bin/reference_sts/hg38/hg38.predefined.pa b/bin/reference_sts/hg38/hg38.predefined.pa
+index 587d48d..9f2904f 100644
+--- a/bin/reference_sts/hg38/hg38.predefined.pa
++++ b/bin/reference_sts/hg38/hg38.predefined.pa
+@@ -9,6 +9,7 @@ atxn3,chr14,92071011,92071052,CAG,-14,12-40:55-150,
+ atxn7,chr3,63912686,63912715,CAG,+7,7-17:38-120,
+ atxn8os,chr13,70139351,70139428,CTG,+15,16-37:110-250,
+ cacna1a,chr19,13207859,13207897,CAG,-8,4-18:21-30,
++cnbp,chr3,129172577,129172696,CAGG,+20,10-30:55+,
+ csf1po,chr5,150076321,150076397,CTAT,+19,,
+ d10s1248,chr10,129294243,129294295,GGAA,+13,,
+ d10s1435,chr10,2201137,2201198,TATC,+15,,
+@@ -75,6 +76,7 @@ fmr1,chrX,147912051,147912110,CGG,+10,6-53:230+/55-200,
+ fxn,chr9,69037287,69037305,GAA,+5,7-34:100+,
+ htt,chr4,3074877,3074939,CAG,+19,6-35:36-250,
+ humth01,chr11,2171085,2171116,TGAA,+7,,
++nop56,chr20,2652734,2652780,GGCCTG,-8,3-14:650-2500,
+ ppp2r2b,chr5,146878729,146878759,CAG,-10,7-28:66-78,
+ tbp,chr6,170561899,170562021,CAG,+19,25-42:47-63,
+ th01,chr11,2171085,2171116,TGAA,+7,,

@@ -1,0 +1,13 @@
+diff --git a/environment.yml b/environment.yml
+index b01a757..97ce736 100644
+--- a/environment.yml
++++ b/environment.yml
+@@ -38,7 +38,7 @@ dependencies:
+   - ncurses=6.2=he6710b0_1
+   - numpy=1.12.1=py27h9378851_1
+   - olefile=0.46=py_0
+-  - openssl=1.0
++  - openssl=1.1.1u
+   - pcre=8.43=he6710b0_0
+   - peakutils=1.1.0=py27_0
+   - perl=5.26.2=h14c3975_0
