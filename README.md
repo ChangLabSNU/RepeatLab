@@ -1,5 +1,6 @@
 # RepeatLab
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChangLabSNU/RepeatLab/blob/main/RepeatLab.ipynb)
+[![DOI:10.1038/xyz123](https://img.shields.io/badge/DOI-10.1038/s12276--026--01683--6-blue)](https://doi.org/10.1038/s12276-026-01683-6) 
 <p align="center"><img src="https://github.com/ChangLabSNU/RepeatLab/blob/main/RepeatLab_logo.png" height="350"/></p>
 Long-read sequencing data analysis for repeat expansion diseases diagnosis based on Google Colab.
 
@@ -52,4 +53,14 @@ You can find the report file at `analyses/NA03697_test-DMPK/report.html` after t
 If you encounter any errors using RepeatLab, please report the trouble issues at [Issues](https://github.com/ChangLabSNU/RepeatLab/issues).
 
 ### Citing RepeatLab
-A pre-print is going to be uploaded soon.
+> Han, Y., Jang, J. H., & Chang, H. (2026). Targeted long-read sequencing for high-resolution repeat profiling in myotonic dystrophy type 1. *Experimental & Molecular Medicine*, 1-13.
+
+```bibtex
+@article{han2026targeted,
+  title={Targeted long-read sequencing for high-resolution repeat profiling in myotonic dystrophy type 1},
+  author={Han, Yoojung and Jang, Ja-Hyun and Chang, Hyeshik},
+  journal={Experimental \& Molecular Medicine},
+  pages={1--13},
+  year={2026},
+  publisher={Nature Publishing Group UK London}
+}
